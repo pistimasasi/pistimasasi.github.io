@@ -39,6 +39,8 @@ button{font-family:inherit}
 .play{display:block;width:100%;background:linear-gradient(180deg,#5ee07a,#22a447);color:#fff;border:none;padding:15px;border-radius:16px;font-size:21px;font-weight:900;letter-spacing:1px;cursor:pointer;box-shadow:0 5px 0 #156b2d;text-shadow:0 2px 0 rgba(0,0,0,.25)}
 .play:active{transform:translateY(3px);box-shadow:0 2px 0 #156b2d}
 .online{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:linear-gradient(180deg,#5ee07a,#22a447);border:none;color:#fff;border-radius:16px;padding:15px;font-size:19px;font-weight:900;letter-spacing:.5px;cursor:pointer;box-shadow:0 5px 0 #156b2d;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+.tbtn.snd{padding:6px 7px}.logo{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+@media(max-width:420px){.logo{font-size:17px}.top .tbtn{padding:5px 7px;font-size:12px}.coins{padding:4px 8px}.top>div:last-child{gap:4px!important}}.tbtn.off{opacity:.45}
 .legal{text-align:center;font-size:12px;opacity:.75;padding:4px 0}.legal a{color:#fff}
 .online:active{transform:translateY(3px);box-shadow:0 2px 0 #156b2d}
 .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -255,6 +257,7 @@ button{font-family:inherit}
     <div style="display:flex;gap:6px;align-items:center">
       <div class="coins" id="coinPill">🪙 <b id="coinN">0</b></div>
       <button class="tbtn" id="homeBtn" style="display:none">🏠</button>
+      <button class="tbtn snd" id="sfxBtn" aria-label="Ses efektleri">🔊</button><button class="tbtn snd" id="musBtn" aria-label="Müzik">🎵</button>
       <button class="tbtn" id="rulesBtn">❔</button>
     </div>
   </div>
@@ -451,6 +454,90 @@ button{font-family:inherit}
 <script src="js/supabase.js"></script>
 <script>
 const $=id=>document.getElementById(id);
+// ================= SES / SOUND (Web Audio ile üretilir, dosya yok, telif yok) =================
+const SND=(()=>{
+  let ctx=null,master=null,sfxG=null,musG=null,musTimer=null,step=0,nextT=0,phrase=0;
+  const on=k=>!(SV&&SV.settings&&SV.settings[k]===false);
+  function init(){
+    if(ctx)return true;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;
+    try{ctx=new AC();}catch(e){return false;}
+    master=ctx.createGain();master.gain.value=0.9;master.connect(ctx.destination);
+    sfxG=ctx.createGain();sfxG.gain.value=0.55;sfxG.connect(master);
+    musG=ctx.createGain();musG.gain.value=0.0;musG.connect(master);
+    return true;}
+  function ready(){if(!ctx)return false;if(ctx.state==='suspended')ctx.resume().catch(()=>{});return true;}
+  let noiseBuf=null;
+  function noise(){if(noiseBuf)return noiseBuf;const n=ctx.sampleRate*0.5;noiseBuf=ctx.createBuffer(1,n,ctx.sampleRate);
+    const d=noiseBuf.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;return noiseBuf;}
+  function nz(t,dur,freq,q,vol,out,type){const s=ctx.createBufferSource();s.buffer=noise();
+    const f=ctx.createBiquadFilter();f.type=type||'bandpass';f.frequency.value=freq;f.Q.value=q;
+    const g=ctx.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+    s.connect(f);f.connect(g);g.connect(out||sfxG);s.start(t);s.stop(t+dur+0.02);}
+  function tone(t,freq,dur,vol,type,out,f2){const o=ctx.createOscillator(),g=ctx.createGain();o.type=type||'sine';
+    o.frequency.setValueAtTime(freq,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+    o.connect(g);g.connect(out||sfxG);o.start(t);o.stop(t+dur+0.02);}
+  const N=s=>293.66*Math.pow(2,s/12); // 0 = Re (D4)
+  const fx={
+    card(t){nz(t,0.07,2600,0.8,0.9);tone(t,140,0.05,0.35,'sine',null,70);},
+    take(t){fx.card(t);nz(t+0.05,0.22,1800,0.6,0.35);},
+    deal(t){for(let i=0;i<4;i++)nz(t+i*0.075,0.05,3000,0.9,0.6);},
+    pisti(t){fx.card(t);[0,4,7,12,16].forEach((s,i)=>tone(t+0.08+i*0.07,N(s+12),0.35,0.22,'triangle'));
+      [24,28,31].forEach((s,i)=>tone(t+0.5+i*0.05,N(s),0.5,0.08,'sine'));},
+    turn(t){tone(t,N(19),0.18,0.12,'sine');tone(t+0.12,N(24),0.25,0.12,'sine');},
+    tick(t){tone(t,1400,0.03,0.18,'square');},
+    msg(t){tone(t,620,0.12,0.18,'sine',null,940);},
+    pop(t){tone(t,420,0.1,0.2,'sine',null,700);},
+    tea(t){[2093,3136,4186].forEach((f,i)=>tone(t+i*0.004,f,0.5-i*0.1,0.12/(i+1),'sine'));tone(t+0.09,2637,0.4,0.06,'sine');},
+    round(t){tone(t,N(7),0.3,0.18,'triangle');tone(t+0.18,N(12),0.45,0.18,'triangle');},
+    win(t){[0,4,7,12].forEach((s,i)=>tone(t+i*0.12,N(s),0.3,0.25,'triangle'));
+      [0,4,7,12].forEach(s=>tone(t+0.55,N(s),0.9,0.12,'triangle'));nz(t+0.55,0.6,6000,0.5,0.15,null,'highpass');},
+    lose(t){[7,5,4,0].forEach((s,i)=>tone(t+i*0.22,N(s-12),0.35,0.2,'triangle'));}
+  };
+  function play(name){if(!on('sfx')||!ready()||!fx[name])return;try{fx[name](ctx.currentTime+0.01);}catch(e){}}
+  // ---- Müzik: Hicaz makamında, saz + darbuka havasında kendi bestemiz ----
+  const PH=[
+    [7,null,8,7,4,null,5,4, 1,null,4,1,0,null,null,null],
+    [0,1,4,5,7,null,7,8, 10,8,7,null,5,4,5,null],
+    [12,null,10,8,7,null,8,7, 5,4,5,null,7,null,null,null],
+    [8,7,5,4,1,null,4,5, 4,1,0,null,0,null,null,null]];
+  const BASS=[0,-7,-5,0];const DRUM='D.tt D.t. D.tt D.t.';const BEAT=60/92/2;
+  function saz(t,f,vol){const o=ctx.createOscillator(),o2=ctx.createOscillator(),lp=ctx.createBiquadFilter(),g=ctx.createGain();
+    o.type='sawtooth';o2.type='triangle';o.frequency.value=f;o2.frequency.value=f*1.004;
+    lp.type='lowpass';lp.frequency.setValueAtTime(f*6,t);lp.frequency.exponentialRampToValueAtTime(f*1.5,t+0.25);
+    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+0.45);
+    o.connect(lp);o2.connect(lp);lp.connect(g);g.connect(musG);o.start(t);o2.start(t);o.stop(t+0.5);o2.stop(t+0.5);}
+  function sched(){
+    while(nextT<ctx.currentTime+0.25){
+      const p=PH[phrase],i=step%16,s=p[i];
+      if(s!==null)saz(nextT,N(s),0.32);
+      if(i===0||i===8)tone(nextT,N(BASS[phrase]-24),BEAT*7,0.18,'triangle',musG);
+      const d=DRUM[i];
+      if(d==='D')tone(nextT,95,0.22,0.5,'sine',musG,50);
+      else if(d==='t')nz(nextT,0.05,4200,0.7,0.25,musG,'highpass');
+      nextT+=BEAT*(i%2===0?1.06:0.94);step++;
+      if(step%16===0){phrase=(phrase+1)%PH.length;}
+    }}
+  function musicOn(){if(!on('music')||!ready()||musTimer)return;
+    nextT=ctx.currentTime+0.1;step=0;phrase=0;
+    musG.gain.cancelScheduledValues(ctx.currentTime);musG.gain.setValueAtTime(0.0001,ctx.currentTime);
+    musG.gain.exponentialRampToValueAtTime(0.16,ctx.currentTime+2);
+    musTimer=setInterval(sched,60);sched();}
+  function musicOff(){if(!musTimer)return;clearInterval(musTimer);musTimer=null;
+    if(ctx){musG.gain.cancelScheduledValues(ctx.currentTime);musG.gain.setValueAtTime(0.0001,ctx.currentTime);}}
+  function unlock(){if(init()){ready();if(on('music'))musicOn();}}
+  ['pointerdown','touchstart','keydown'].forEach(ev=>addEventListener(ev,unlock,{passive:true}));
+  document.addEventListener('visibilitychange',()=>{if(!ctx)return;
+    if(document.hidden){musicOff();ctx.suspend().catch(()=>{});}
+    else{ctx.resume().catch(()=>{});if(on('music'))musicOn();}});
+  function toggle(k){SV.settings[k]=!on(k);save();
+    if(k==='music'){if(on('music')){unlock();musicOn();}else musicOff();}
+    else if(on('sfx')){unlock();play('pop');}
+    ui();}
+  function ui(){const a=$('sfxBtn'),b=$('musBtn');if(a){a.classList.toggle('off',!on('sfx'));a.textContent=on('sfx')?'🔊':'🔇';}
+    if(b)b.classList.toggle('off',!on('music'));}
+  return {play,toggle,ui};
+})();
 // ================= DİL / SPRACHE / LANGUAGE =================
 const I18N={
 // menü
@@ -715,6 +802,7 @@ $('segLang').querySelectorAll('button').forEach(b=>b.onclick=()=>{SV.lang=b.data
 function showScreen(s){$('menu').classList.toggle('on',s==='menu');$('game').classList.toggle('on',s==='game');$('homeBtn').style.display=s==='game'?'':'none';}
 $('playBtn').onclick=()=>newGame();
 $('onlineBtn').onclick=()=>openOnline();
+$('sfxBtn').onclick=()=>SND.toggle('sfx');$('musBtn').onclick=()=>SND.toggle('music');SND.ui();
 const openOv=id=>$(id).classList.add('show'),closeOv=id=>$(id).classList.remove('show');
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{closeOv(b.dataset.close);renderMenu();});
 $('tShop').onclick=()=>{renderShop();openOv('shopOv');};
@@ -841,8 +929,8 @@ function newRound(){
   deal();setTurn(G.starter);setMsg(G.starter===0?t('your_turn'):t('starts',G.players[G.starter].name));render();
   if(G.starter!==0)botLater();
 }
-function deal(){for(let k=0;k<4;k++)G.hands.forEach(h=>h.push(G.deck.shift()));}
-function setTurn(i){G.turn=i;G.turnStart=Date.now();G.warned=false;}
+function deal(){for(let k=0;k<4;k++)G.hands.forEach(h=>h.push(G.deck.shift()));SND.play('deal');}
+function setTurn(i){if(i===0&&G.turn!==0&&!G.over)setTimeout(()=>SND.play('turn'),350);G.turn=i;G.turnStart=Date.now();G.warned=false;}
 function setMsg(m){$('msg').textContent=m;}
 function render(){
   if(!G)return;
@@ -870,14 +958,15 @@ function play(i,idx){
   if(top&&(card.r===top.r||card.r==='J')){
     const got=G.table.length+1;let txt=t('took',nm,got);
     if(G.table.length===1&&card.r===top.r){
-      const v=card.r==='J'?20:10;G.pis[i]+=v;txt=t('pisti_msg',nm,v);pop('PİŞTİ!');
+      const v=card.r==='J'?20:10;G.pis[i]+=v;txt=t('pisti_msg',nm,v);pop('PİŞTİ!');SND.play('pisti');
       if(i===0){confetti();SV.stats.pisti++;if(card.r==='J')SV.stats.jpisti++;addCoins(20);taskProg('pisti',1);
         setTimeout(()=>{if(!G||G.id!==gid)return;const b=randBot();Math.random()<.5?sendGift(b,0,Math.random()<.7?'cay':'kahve'):say(b,t('bot_wow'));},1000);}
       else setTimeout(()=>{if(G&&G.id===gid)say(i,t('bot_pisti'));},700);
     }else if(i===0&&got>=6&&Math.random()<.6)setTimeout(()=>{if(G&&G.id===gid)say(randBot(),t('bot_ah'));},800);
     if(i===0){SV.stats.cards+=got;taskProg('cards',got);if(card.r==='J')taskProg('jack',1);checkAch();}
+    if(!(G.table.length===1&&card.r===top.r))SND.play('take');
     G.cap[i].push(...G.table,card);G.table=[];G.last=i;setMsg(txt);
-  }else{G.table.push(card);setMsg(t('threw',nm,card.r+card.s));}
+  }else{G.table.push(card);setMsg(t('threw',nm,card.r+card.s));SND.play('card');}
   setTurn((i+1)%G.n);render();
   setTimeout(()=>{if(G&&G.id===gid)next();},i===0?650:300);
 }
@@ -913,10 +1002,11 @@ function endRound(){
   const top=Math.max(...res.map(r=>r.sum));if(myS===top&&res.filter(r=>r.sum===top).length===1)taskProg('win',1);
   const tots=G.tot.slice(0,U),best=Math.max(...tots),leaders=tots.filter(t=>t===best).length;
   G.over=best>=G.target&&leaders===1;
+  if(!G.over)SND.play('round');
   let title=t('round_over');
   if(G.over){const w=tots.indexOf(best),won=w===me;SV.stats.games++;taskProg('game',1);
-    if(won){SV.stats.wins++;addXP(100);addCoins(50);confetti();title=t('you_won');say(randBot(),t('bot_congrats'));}
-    else{title=t('x_won',unitName(w));say(w===0?randBot():(G.mode==='esli'?randBot():w),t('bot_rematch'));}}
+    if(won){SV.stats.wins++;addXP(100);addCoins(50);confetti();SND.play('win');title=t('you_won');say(randBot(),t('bot_congrats'));}
+    else{SND.play('lose');title=t('x_won',unitName(w));say(w===0?randBot():(G.mode==='esli'?randBot():w),t('bot_rematch'));}}
   checkAch();save();
   G.turn=null;render();
   let h=`<h2>${esc(title)}</h2><table><tr><th></th>${res.map((r,u)=>`<th>${esc(unitName(u))}${u===me?' ⭐':''}</th>`).join('')}</tr>`;
@@ -941,6 +1031,7 @@ setInterval(()=>{
     const left=Math.max(0,TURN_MS-(now-G.turnStart)),sec=Math.ceil(left/1000),col=left>5000?'#2ec27e':left>3000?'#f2b632':'#e63946';
     e.ring.style.display='block';e.ring.style.setProperty('--p',left/TURN_MS*100);e.ring.style.setProperty('--c',col);
     e.num.style.display='flex';e.num.textContent=sec;e.num.style.background=col;e.num.classList.toggle('warn',left<=3000);});
+  if(G.turn===0&&!G.over){const sl=Math.ceil(Math.max(0,TURN_MS-(now-G.turnStart))/1000);if(sl<=3&&sl>0&&sl!==G._tk){G._tk=sl;SND.play('tick');}}else G._tk=0;
   $('sTimer').textContent=G.turn===0?`· ⏱ ${Math.ceil(Math.max(0,TURN_MS-(now-G.turnStart))/1000)} ${t('sec_short')}`:'';
   if(G.online)onlineTick(now);
   else if(G.turn===0&&!modalOpen()){const left=TURN_MS-(now-G.turnStart);
@@ -953,7 +1044,7 @@ setInterval(updDots,15000);
 function center(el){const r=el.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2};}
 function fly(ch,a,b,cb){const A=center(a),B=center(b),f=document.createElement('div');f.className='fly';f.textContent=ch;
   f.style.left=(A.x-20)+'px';f.style.top=(A.y-20)+'px';document.body.appendChild(f);f.getBoundingClientRect();
-  f.style.transform=`translate(${B.x-A.x}px,${B.y-A.y}px) scale(1.7)`;setTimeout(()=>f.style.opacity='0',750);setTimeout(()=>{f.remove();cb&&cb();},950);}
+  f.style.transform=`translate(${B.x-A.x}px,${B.y-A.y}px) scale(1.7)`;setTimeout(()=>f.style.opacity='0',750);setTimeout(()=>{f.remove();SND.play(ch==='🍵'||ch==='☕'?'tea':'pop');cb&&cb();},950);}
 const bubT={};
 function bubble(i,text){if(!G)return;const b=G.players[i].el.bub;b.textContent=text;b.classList.add('show');clearTimeout(bubT[i]);bubT[i]=setTimeout(()=>b.classList.remove('show'),2800);}
 function say(i,text){if(!G)return;bubble(i,text);addChat(i===0?'p':'c',G.players[i].name,text);}
@@ -994,6 +1085,7 @@ let unread=0;
 function addChat(cls,name,text){const d=document.createElement('div');d.className='m '+cls;
   if(name){const s=document.createElement('small');s.textContent=name;d.appendChild(s);}
   d.appendChild(document.createTextNode(text));$('log').appendChild(d);$('log').scrollTop=1e6;
+  if(cls==='c')SND.play('msg');
   if(cls==='c'&&!$('sheet').classList.contains('open')){unread++;$('unread').textContent=unread;$('unread').style.display='block';}}
 function cpuReply(x){x=x.toLowerCase();
   if(/selam|merhaba|\bsa\b|slm|hallo|\bhi\b|hello|hey|servus|moin/.test(x))return t('c_hello');
@@ -1161,13 +1253,15 @@ function updateOnline(room,players,cards){
     const lpn=st.lastPlay?st.lastPlay.n:-1;
     if(nt!==G.turn||lpn!==ON.lastSeenN){G.turnStart=Date.now();G.forcedAt=0;ON.lastSeenN=lpn;}
     ON.version=room.version;}
+  if(nt===0&&G.turn!==0&&room.status!=='finished')setTimeout(()=>SND.play('turn'),350);
   G.turn=nt;
   const lp=st.lastPlay;
   if(lp&&lp.n!==ON.lastN){ON.lastN=lp.n;const who=loc(lp.seat),nm=G.players[who].name,c=fromCode(lp.card);
     if(lp.got){setMsg(lp.pisti?t('pisti_msg',nm,lp.pisti):t('took',nm,lp.got));
-      if(lp.pisti){pop('PİŞTİ!');if(who===0){confetti();SV.stats.pisti++;if(c.r==='J')SV.stats.jpisti++;addCoins(20);taskProg('pisti',1);}}
+      if(lp.pisti){pop('PİŞTİ!');SND.play('pisti');}else SND.play('take');
+      if(lp.pisti){if(who===0){confetti();SV.stats.pisti++;if(c.r==='J')SV.stats.jpisti++;addCoins(20);taskProg('pisti',1);}}
       if(who===0){SV.stats.cards+=lp.got;taskProg('cards',lp.got);if(c.r==='J')taskProg('jack',1);checkAch();save();}}
-    else setMsg(t('threw',nm,c.r+c.s));}
+    else{setMsg(t('threw',nm,c.r+c.s));SND.play('card');}}
   else if(!lp&&nt!==null)setMsg(nt===0?t('your_turn'):t('plays_now',G.players[nt].name));
   if(room.status==='finished'&&!ON.finishedShown){ON.finishedShown=true;G.over=true;G.turn=null;if(st.result)ON.resultRound=st.result.round;render();onlineResult(st,true);return;}
   if(st.result&&st.result.round!==ON.resultRound){ON.resultRound=st.result.round;render();onlineResult(st,false);return;}
@@ -1177,13 +1271,13 @@ function onlineResult(st,final){
   if(!st.result)return;
   const U=G.mode==='esli'?2:G.n,res=[],tots=[];
   for(let u=0;u<U;u++){const s=srvUnit(u);res.push({cards:st.result.cards[s],pisti:st.result.pisti[s],most:st.result.most[s],sum:st.result.sum[s]});tots.push(st.tot[s]);}
-  const myS=res[0].sum;SV.stats.hands++;SV.stats.best=Math.max(SV.stats.best,myS);addXP(myS+20);
+  if(!final)SND.play('round');const myS=res[0].sum;SV.stats.hands++;SV.stats.best=Math.max(SV.stats.best,myS);addXP(myS+20);
   if(G.mode==='esli')taskProg('team',1);
   const top=Math.max(...res.map(r=>r.sum));if(myS===top&&res.filter(r=>r.sum===top).length===1)taskProg('win',1);
   let title=t('round_over'),won=false;
   if(final&&st.winner!==null&&st.winner!==undefined){let wu=0;for(let u=0;u<U;u++)if(srvUnit(u)===st.winner)wu=u;won=wu===0;
     SV.stats.games++;taskProg('game',1);
-    if(won){SV.stats.wins++;addXP(100);addCoins(50);confetti();title=t('you_won');}else title=t('x_won',unitName(wu));}
+    if(won){SV.stats.wins++;addXP(100);addCoins(50);confetti();SND.play('win');title=t('you_won');}else{SND.play('lose');title=t('x_won',unitName(wu));}}
   else if(final)title=t('game_over');
   checkAch();save();
   let h=`<h2>${esc(title)}</h2><table><tr><th></th>${res.map((r,u)=>`<th>${esc(unitName(u))}${u===0?' ⭐':''}</th>`).join('')}</tr>`;
