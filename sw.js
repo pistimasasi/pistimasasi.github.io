@@ -1,5 +1,5 @@
 // Pişti Masası – basit çevrimdışı önbellek. Online (Supabase) istekleri hiç önbelleğe alınmaz.
-const CACHE = 'pisti-v4';
+const CACHE = 'pisti-v5';
 const FILES = ['./', 'index.html', 'js/supabase.js', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png',
   'impressum.html', 'datenschutz.html'];
