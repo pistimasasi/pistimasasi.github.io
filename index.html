@@ -257,7 +257,7 @@ button{font-family:inherit}
     <div style="display:flex;gap:6px;align-items:center">
       <div class="coins" id="coinPill">🪙 <b id="coinN">0</b></div>
       <button class="tbtn" id="homeBtn" style="display:none">🏠</button>
-      <button class="tbtn snd" id="sfxBtn" aria-label="Ses efektleri">🔊</button><button class="tbtn snd" id="musBtn" aria-label="Müzik">🎵</button>
+      <button class="tbtn snd" id="sfxBtn" aria-label="Ses efektleri">🔊</button>
       <button class="tbtn" id="rulesBtn">❔</button>
     </div>
   </div>
@@ -454,88 +454,47 @@ button{font-family:inherit}
 <script src="js/supabase.js"></script>
 <script>
 const $=id=>document.getElementById(id);
-// ================= SES / SOUND (Web Audio ile üretilir, dosya yok, telif yok) =================
+// ================= SES / SOUND – gerçek kayıtlar: Kenney "Casino Audio" (CC0), sounds/ klasöründe =================
 const SND=(()=>{
-  let ctx=null,master=null,sfxG=null,musG=null,musTimer=null,step=0,nextT=0,phrase=0;
-  const on=k=>!(SV&&SV.settings&&SV.settings[k]===false);
+  let ctx=null,sfxG=null,loading=false;const BUF={};
+  const on=()=>!(SV&&SV.settings&&SV.settings.sfx===false);
+  const FILES=['card-place-1','card-place-2','card-place-3','card-place-4','card-slide-1','card-slide-2','card-slide-3','card-slide-5',
+    'card-fan-1','card-shuffle','chips-stack-1','chips-stack-2','chips-stack-3','chips-collide-1','chips-collide-2','chips-handle-1','chip-lay-1','chip-lay-2'];
   function init(){
     if(ctx)return true;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;
     try{ctx=new AC();}catch(e){return false;}
-    master=ctx.createGain();master.gain.value=0.9;master.connect(ctx.destination);
-    sfxG=ctx.createGain();sfxG.gain.value=0.55;sfxG.connect(master);
-    musG=ctx.createGain();musG.gain.value=0.0;musG.connect(master);
-    return true;}
+    sfxG=ctx.createGain();sfxG.gain.value=1;sfxG.connect(ctx.destination);load();return true;}
+  function load(){if(loading||!ctx)return;loading=true;
+    FILES.forEach(n=>fetch('sounds/'+n+'.mp3').then(r=>r.arrayBuffer()).then(a=>new Promise((ok,no)=>ctx.decodeAudioData(a,ok,no)))
+      .then(b=>{BUF[n]=b;}).catch(()=>{}));}
   function ready(){if(!ctx)return false;if(ctx.state==='suspended')ctx.resume().catch(()=>{});return true;}
-  let noiseBuf=null;
-  function noise(){if(noiseBuf)return noiseBuf;const n=ctx.sampleRate*0.5;noiseBuf=ctx.createBuffer(1,n,ctx.sampleRate);
-    const d=noiseBuf.getChannelData(0);for(let i=0;i<n;i++)d[i]=Math.random()*2-1;return noiseBuf;}
-  function nz(t,dur,freq,q,vol,out,type){const s=ctx.createBufferSource();s.buffer=noise();
-    const f=ctx.createBiquadFilter();f.type=type||'bandpass';f.frequency.value=freq;f.Q.value=q;
-    const g=ctx.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);
-    s.connect(f);f.connect(g);g.connect(out||sfxG);s.start(t);s.stop(t+dur+0.02);}
-  function tone(t,freq,dur,vol,type,out,f2){const o=ctx.createOscillator(),g=ctx.createGain();o.type=type||'sine';
-    o.frequency.setValueAtTime(freq,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);
-    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+0.01);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
-    o.connect(g);g.connect(out||sfxG);o.start(t);o.stop(t+dur+0.02);}
-  const N=s=>293.66*Math.pow(2,s/12); // 0 = Re (D4)
+  function smp(t,name,vol,rate){const b=BUF[name];if(!b)return;const s=ctx.createBufferSource(),g=ctx.createGain();
+    s.buffer=b;s.playbackRate.value=rate||(0.95+Math.random()*0.1);g.gain.value=vol;s.connect(g);g.connect(sfxG);s.start(t);}
+  const pick=a=>a[Math.floor(Math.random()*a.length)];
+  let lastShuffle=0;
   const fx={
-    card(t){nz(t,0.07,2600,0.8,0.9);tone(t,140,0.05,0.35,'sine',null,70);},
-    take(t){fx.card(t);nz(t+0.05,0.22,1800,0.6,0.35);},
-    deal(t){for(let i=0;i<4;i++)nz(t+i*0.075,0.05,3000,0.9,0.6);},
-    pisti(t){fx.card(t);[0,4,7,12,16].forEach((s,i)=>tone(t+0.08+i*0.07,N(s+12),0.35,0.22,'triangle'));
-      [24,28,31].forEach((s,i)=>tone(t+0.5+i*0.05,N(s),0.5,0.08,'sine'));},
-    turn(t){tone(t,N(19),0.18,0.12,'sine');tone(t+0.12,N(24),0.25,0.12,'sine');},
-    tick(t){tone(t,1400,0.03,0.18,'square');},
-    msg(t){tone(t,620,0.12,0.18,'sine',null,940);},
-    pop(t){tone(t,420,0.1,0.2,'sine',null,700);},
-    tea(t){[2093,3136,4186].forEach((f,i)=>tone(t+i*0.004,f,0.5-i*0.1,0.12/(i+1),'sine'));tone(t+0.09,2637,0.4,0.06,'sine');},
-    round(t){tone(t,N(7),0.3,0.18,'triangle');tone(t+0.18,N(12),0.45,0.18,'triangle');},
-    win(t){[0,4,7,12].forEach((s,i)=>tone(t+i*0.12,N(s),0.3,0.25,'triangle'));
-      [0,4,7,12].forEach(s=>tone(t+0.55,N(s),0.9,0.12,'triangle'));nz(t+0.55,0.6,6000,0.5,0.15,null,'highpass');},
-    lose(t){[7,5,4,0].forEach((s,i)=>tone(t+i*0.22,N(s-12),0.35,0.2,'triangle'));}
+    card(t){smp(t,pick(['card-place-1','card-place-2','card-place-3','card-place-4']),1);},
+    take(t){smp(t,pick(['card-slide-1','card-slide-2','card-slide-3','card-slide-5']),1);},
+    shuffle(t){lastShuffle=Date.now();smp(t,'card-shuffle',0.9,1);},
+    deal(t){if(Date.now()-lastShuffle<1500)t+=1.3;smp(t,'card-fan-1',0.9);},
+    pisti(t){fx.card(t);smp(t+0.18,'chips-stack-1',0.9);smp(t+0.38,'chips-stack-2',0.9);},
+    turn(t){smp(t,'chip-lay-1',0.35);},
+    tick(t){},
+    wheel(t){smp(t,'chip-lay-2',0.55,1.1+Math.random()*0.1);},
+    coins(t){smp(t,'chips-stack-1',0.9);smp(t+0.18,'chips-handle-1',0.8);},
+    msg(t){smp(t,'chip-lay-2',0.3);},
+    pop(t){smp(t,'chips-collide-2',0.4);},
+    tea(t){smp(t,'chips-collide-1',0.7);},
+    round(t){smp(t,'chips-handle-1',0.8);},
+    win(t){smp(t,'chips-stack-1',0.9);smp(t+0.2,'chips-stack-2',0.9);smp(t+0.4,'chips-stack-3',0.9);smp(t+0.7,'chips-handle-1',0.9);},
+    lose(t){smp(t,'chips-handle-1',0.6,0.9);}
   };
-  function play(name){if(!on('sfx')||!ready()||!fx[name])return;try{fx[name](ctx.currentTime+0.01);}catch(e){}}
-  // ---- Müzik: Hicaz makamında, saz + darbuka havasında kendi bestemiz ----
-  const PH=[
-    [7,null,8,7,4,null,5,4, 1,null,4,1,0,null,null,null],
-    [0,1,4,5,7,null,7,8, 10,8,7,null,5,4,5,null],
-    [12,null,10,8,7,null,8,7, 5,4,5,null,7,null,null,null],
-    [8,7,5,4,1,null,4,5, 4,1,0,null,0,null,null,null]];
-  const BASS=[0,-7,-5,0];const DRUM='D.tt D.t. D.tt D.t.';const BEAT=60/92/2;
-  function saz(t,f,vol){const o=ctx.createOscillator(),o2=ctx.createOscillator(),lp=ctx.createBiquadFilter(),g=ctx.createGain();
-    o.type='sawtooth';o2.type='triangle';o.frequency.value=f;o2.frequency.value=f*1.004;
-    lp.type='lowpass';lp.frequency.setValueAtTime(f*6,t);lp.frequency.exponentialRampToValueAtTime(f*1.5,t+0.25);
-    g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+0.008);g.gain.exponentialRampToValueAtTime(0.0001,t+0.45);
-    o.connect(lp);o2.connect(lp);lp.connect(g);g.connect(musG);o.start(t);o2.start(t);o.stop(t+0.5);o2.stop(t+0.5);}
-  function sched(){
-    while(nextT<ctx.currentTime+0.25){
-      const p=PH[phrase],i=step%16,s=p[i];
-      if(s!==null)saz(nextT,N(s),0.32);
-      if(i===0||i===8)tone(nextT,N(BASS[phrase]-24),BEAT*7,0.18,'triangle',musG);
-      const d=DRUM[i];
-      if(d==='D')tone(nextT,95,0.22,0.5,'sine',musG,50);
-      else if(d==='t')nz(nextT,0.05,4200,0.7,0.25,musG,'highpass');
-      nextT+=BEAT*(i%2===0?1.06:0.94);step++;
-      if(step%16===0){phrase=(phrase+1)%PH.length;}
-    }}
-  function musicOn(){if(!on('music')||!ready()||musTimer)return;
-    nextT=ctx.currentTime+0.1;step=0;phrase=0;
-    musG.gain.cancelScheduledValues(ctx.currentTime);musG.gain.setValueAtTime(0.0001,ctx.currentTime);
-    musG.gain.exponentialRampToValueAtTime(0.16,ctx.currentTime+2);
-    musTimer=setInterval(sched,60);sched();}
-  function musicOff(){if(!musTimer)return;clearInterval(musTimer);musTimer=null;
-    if(ctx){musG.gain.cancelScheduledValues(ctx.currentTime);musG.gain.setValueAtTime(0.0001,ctx.currentTime);}}
-  function unlock(){if(init()){ready();if(on('music'))musicOn();}}
+  function play(name){if(!on()||!ready()||!fx[name])return;try{fx[name](ctx.currentTime+0.01);}catch(e){}}
+  function unlock(){if(init())ready();}
   ['pointerdown','touchstart','keydown'].forEach(ev=>addEventListener(ev,unlock,{passive:true}));
-  document.addEventListener('visibilitychange',()=>{if(!ctx)return;
-    if(document.hidden){musicOff();ctx.suspend().catch(()=>{});}
-    else{ctx.resume().catch(()=>{});if(on('music'))musicOn();}});
-  function toggle(k){SV.settings[k]=!on(k);save();
-    if(k==='music'){if(on('music')){unlock();musicOn();}else musicOff();}
-    else if(on('sfx')){unlock();play('pop');}
-    ui();}
-  function ui(){const a=$('sfxBtn'),b=$('musBtn');if(a){a.classList.toggle('off',!on('sfx'));a.textContent=on('sfx')?'🔊':'🔇';}
-    if(b)b.classList.toggle('off',!on('music'));}
+  document.addEventListener('visibilitychange',()=>{if(!ctx)return;if(document.hidden)ctx.suspend().catch(()=>{});else ctx.resume().catch(()=>{});});
+  function toggle(){SV.settings.sfx=!on();save();if(on()){unlock();play('pop');}ui();}
+  function ui(){const a=$('sfxBtn');if(a){a.classList.toggle('off',!on());a.textContent=on()?'🔊':'🔇';}}
   return {play,toggle,ui};
 })();
 // ================= DİL / SPRACHE / LANGUAGE =================
@@ -802,7 +761,7 @@ $('segLang').querySelectorAll('button').forEach(b=>b.onclick=()=>{SV.lang=b.data
 function showScreen(s){$('menu').classList.toggle('on',s==='menu');$('game').classList.toggle('on',s==='game');$('homeBtn').style.display=s==='game'?'':'none';}
 $('playBtn').onclick=()=>newGame();
 $('onlineBtn').onclick=()=>openOnline();
-$('sfxBtn').onclick=()=>SND.toggle('sfx');$('musBtn').onclick=()=>SND.toggle('music');SND.ui();
+$('sfxBtn').onclick=()=>SND.toggle();SND.ui();
 const openOv=id=>$(id).classList.add('show'),closeOv=id=>$(id).classList.remove('show');
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>{closeOv(b.dataset.close);renderMenu();});
 $('tShop').onclick=()=>{renderShop();openOv('shopOv');};
@@ -922,7 +881,7 @@ function buildSeats(){
     showGiftBadge(p.i);});
   bg($('deckCard'),backImg('cini'));
 }
-function newRound(){
+function newRound(){SND.play('shuffle');
   G.deck=newDeck();G.table=G.deck.splice(0,4);
   while(G.table[3].r==='J'){G.deck.push(G.table.pop());shuffle(G.deck);G.table.push(G.deck.shift());}
   G.hands=G.players.map(()=>[]);G.cap=G.players.map(()=>[]);G.pis=G.players.map(()=>0);G.last=null;G.seen=[G.table[3]];
@@ -1137,11 +1096,15 @@ $('wheelClose').onclick=()=>{if(!spinning){closeOv('wheelOv');renderMenu();}};
 $('spinBtn').onclick=()=>{ensureDaily();if(SV.daily.spun||spinning)return;spinning=true;updWheelUI();
   const i=Math.floor(Math.random()*PRIZES.length),cur=((wheelRot%360)+360)%360,target=(360-(i*45+22.5))%360;
   wheelRot+=360*5+((target-cur+360)%360);$('wheelG').style.transform=`rotate(${wheelRot}deg)`;
-  setTimeout(()=>{spinning=false;SV.daily.spun=true;save();$('wRes').textContent=t('coins_won',PRIZES[i]);confetti();addCoins(PRIZES[i]);updWheelUI();updDots();},4300);};
+  {const el=$('wheelG'),t0=Date.now();let lastSeg=null,lastT=0;const loop=()=>{const m=getComputedStyle(el).transform;
+    if(m&&m!=='none'){const v=m.split('(')[1].split(',').map(parseFloat),a=(Math.atan2(v[1],v[0])*180/Math.PI+360)%360,seg=Math.floor(a/45);
+      if(lastSeg!==null&&seg!==lastSeg&&Date.now()-lastT>45){SND.play('wheel');lastT=Date.now();}lastSeg=seg;}
+    if(Date.now()-t0<4250)requestAnimationFrame(loop);};requestAnimationFrame(loop);}
+  setTimeout(()=>{spinning=false;SV.daily.spun=true;save();$('wRes').textContent=t('coins_won',PRIZES[i]);confetti();SND.play('coins');addCoins(PRIZES[i]);updWheelUI();updDots();},4300);};
 $('vidBtn1').onclick=()=>{ensureDaily();if(SV.daily.videos>=VMAX)return;openOv('adOv');const bar=$('adBar');bar.style.transition='none';bar.style.width='0';
   void bar.offsetWidth;bar.style.transition='width 5s linear';bar.style.width='100%';let n=5;$('adTxt').textContent=t('ad_sec',5);
   const iv=setInterval(()=>{n--;if(n>0){$('adTxt').textContent=t('ad_sec',n);return;}clearInterval(iv);closeOv('adOv');
-    SV.daily.videos++;save();addCoins(VREW);confetti();$('wRes').textContent=t('video_won',VREW);updWheelUI();},1000);};
+    SV.daily.videos++;save();addCoins(VREW);confetti();SND.play('coins');$('wRes').textContent=t('video_won',VREW);updWheelUI();},1000);};
 
 // ================= ONLINE (Supabase) =================
 const SB_URL='https://omvoplofqsnzsjmkomck.supabase.co',SB_KEY='sb_publishable_4KUXCSpZwIWm94ZatVltRw_bqdm7j8E';
