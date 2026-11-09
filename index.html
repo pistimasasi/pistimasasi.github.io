@@ -595,7 +595,7 @@ re_angry:['Hadi ama, çok bekledim! 😡','Na los, ich warte schon ewig! 😡','
 re_clap:['Helal olsun, iyi oynadın! 👏','Respekt, gut gespielt! 👏','Respect, well played! 👏'],re_clap_r:['Teşekkürler 😊 sen de iyisin','Danke 😊 du bist auch gut','Thanks 😊 you’re good too'],
 re_laugh:['😂😂😂','😂😂😂','😂😂😂'],re_laugh_r:['😄 Gülme, sıra sana da gelecek!','😄 Lach nicht, du bist auch noch dran!','😄 Don’t laugh, your turn will come!'],
 re_luck:['Şansın yaver gidiyor 🍀','Du hast heute Glück 🍀','Luck is on your side 🍀'],re_luck_r:['Şans değil, yetenek 😎','Kein Glück, sondern Können 😎','Not luck, skill 😎'],
-q1:['Selam 👋','Hallo 👋','Hi 👋'],q2:['Hayırlı oyunlar 🍀','Viel Glück 🍀','Good luck 🍀'],q3:['Nerelisin?','Woher kommst du?','Where are you from?'],q4:['Güzel oynuyorsun 👏','Du spielst gut 👏','You play well 👏'],q5:['Bir el daha? 🔁','Noch eine Runde? 🔁','One more round? 🔁'],q6:['Çay içer misin? 🍵','Tee gefällig? 🍵','Fancy some tea? 🍵'],
+q1:['Selam 👋','Hallo 👋','Hi 👋'],q2:['Hayırlı oyunlar 🍀','Viel Glück 🍀','Good luck 🍀'],q3:['İyi oyundu 🤝','Gut gespielt 🤝','Good game 🤝'],q4:['Güzel oynuyorsun 👏','Du spielst gut 👏','You play well 👏'],q5:['Bir el daha? 🔁','Noch eine Runde? 🔁','One more round? 🔁'],q6:['Çay içer misin? 🍵','Tee gefällig? 🍵','Fancy some tea? 🍵'],
 c_hello:['Aleyküm selam! 👋 Hoş geldin','Hallo! 👋 Willkommen','Hello! 👋 Welcome'],c_where:['Ben bu telefonun içindenim 😄 Sen nerelisin?','Ich wohne in diesem Handy 😄 Und du?','I live inside this phone 😄 Where are you from?'],
 c_tea:['Çaya hayır denmez 🍵 Tavşan kanı olsun!','Zu Tee sag ich nie nein 🍵','I never say no to tea 🍵'],c_again:['Olur, ben hazırım 💪','Klar, ich bin bereit 💪','Sure, I’m ready 💪'],c_nice:['Sağ ol 😊 sen de fena değilsin!','Danke 😊 du bist auch nicht schlecht!','Thanks 😊 you’re not bad either!'],
 c_r1:['😄','😄','😄'],c_r2:['Haklısın 👍','Stimmt 👍','True 👍'],c_r3:['Hadi bakalım, oyuna dönelim 🃏','Los, weiter geht’s 🃏','Let’s get back to the game 🃏'],c_r4:['Bu masa şanslı bugün 🍀','Der Tisch bringt heute Glück 🍀','Lucky table today 🍀'],c_r5:['Hı hı 😅','Mhm 😅','Mhm 😅'],
@@ -1056,10 +1056,12 @@ function cpuReply(x){x=x.toLowerCase();
   if(/bir el|rövanş|revans|nochmal|noch eine|revanche|again|rematch|one more/.test(x))return t('c_again');
   if(/güzel|iyi|helal|gut|super|stark|good|nice|great/.test(x))return t('c_nice');
   const R=['c_r1','c_r2','c_r3','c_r4','c_r5'];return t(R[Math.floor(Math.random()*R.length)]);}
-function sendChat(t){t=t.trim();if(!t||!G)return;if(G.online)return onlineChat(t);addChat('p',myName(),t);bubble(0,t.length>40?t.slice(0,40)+'…':t);taskProg('chat',1);
+// Online masada yalnız hazır mesajlar: gelen mesaj bu listede yoksa gösterilmez, varsa okuyanın dilinde gösterilir.
+const quickKey=s=>['q1','q2','q3','q4','q5','q6'].find(k=>I18N[k].includes(s));
+function sendChat(t){t=t.trim();if(!t||!G)return;if(G.online){if(quickKey(t))onlineChat(t);return;}addChat('p',myName(),t);bubble(0,t.length>40?t.slice(0,40)+'…':t);taskProg('chat',1);
   const gid=G.id;setTimeout(()=>{if(G&&G.id===gid)say(randBot(),cpuReply(t));},1200+Math.random()*800);}
 $('sendForm').onsubmit=e=>{e.preventDefault();sendChat($('chatIn').value);$('chatIn').value='';};
-$('chatBtn').onclick=()=>{$('sheet').classList.add('open');unread=0;$('unread').style.display='none';$('log').scrollTop=1e6;};
+$('chatBtn').onclick=()=>{$('sendForm').style.display=G&&G.online?'none':'';$('sheet').classList.add('open');unread=0;$('unread').style.display='none';$('log').scrollTop=1e6;};
 $('chatClose').onclick=()=>$('sheet').classList.remove('open');
 
 // ================= PROFİL =================
@@ -1280,8 +1282,9 @@ async function onlineGift(kind,g){
 function onMsg(m){
   if(!ON||m.id<=ON.lastMsg)return;ON.lastMsg=m.id;
   if(isBlocked(m.user_id))return;
-  const mine=m.user_id===ON.uid;addChat(mine?'p':'c',m.name,m.body);
-  if(G&&G.online&&!ON.firstLoad){const li=loc(m.seat);bubble(li,m.body.length>40?m.body.slice(0,40)+'…':m.body);}
+  const key=quickKey(m.body);if(!key)return;const body=t(key);
+  const mine=m.user_id===ON.uid;addChat(mine?'p':'c',m.name,body);
+  if(G&&G.online&&!ON.firstLoad){const li=loc(m.seat);bubble(li,body);}
 }
 function onEvent(e){
   if(!ON||e.id<=ON.lastEv)return;ON.lastEv=e.id;
