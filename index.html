@@ -294,7 +294,7 @@ button{font-family:inherit}
       <button class="tile" id="tRules"><span>📖</span><b data-i18n="tile_rules">Kurallar</b></button>
     </div>
     <div class="fair" data-i18n="fair">🤝 Hilesiz Pişti: botlar senin kartlarını göremez.</div>
-    <div class="legal"><a href="impressum.html" target="_blank" rel="noopener">Impressum</a> · <a href="datenschutz.html" target="_blank" rel="noopener" data-i18n="legal_priv">Gizlilik</a></div>
+    <div class="legal"><a href="impressum.html" target="_blank" rel="noopener">Impressum</a> · <a href="datenschutz.html" target="_blank" rel="noopener" data-i18n="legal_priv">Gizlilik</a><span id="adPrivacyWrap" style="display:none"> · <a href="#" id="adPrivacy" data-i18n="ad_privacy">Reklam ayarları</a></span></div>
   </div>
 
   <!-- OYUN -->
@@ -540,7 +540,7 @@ understood:['Anladım','Verstanden','Got it'],legal_priv:['Gizlilik','Datenschut
 wait_t:['Masa hazırlanıyor','Tisch wird vorbereitet','Preparing the table'],connecting:['Bağlanılıyor…','Verbinde…','Connecting…'],cancel:['İptal','Abbrechen','Cancel'],
 player:['Oyuncu','Spieler','Player'],
 wheel_html:['GÜNLÜK<br>ÇARK','TÄGLICHES<br>GLÜCKSRAD','DAILY<br>WHEEL'],spin:['ÇEVİR!','DREHEN!','SPIN!'],
-ad_label:['REKLAM · deneme sürümü','WERBUNG · Testversion','AD · test version'],ad_text:['Gerçek uygulamada burada kısa bir reklam videosu oynar.','In der echten App läuft hier ein kurzes Werbevideo.','In the real app a short ad video plays here.'],
+ad_privacy:['Reklam ayarları','Werbeeinstellungen','Ad settings'],ad_fail:['Reklam şu an yüklenemedi, biraz sonra tekrar dene.','Werbung konnte gerade nicht geladen werden, versuch es später noch einmal.','The ad could not be loaded right now, please try again later.'],ad_label:['REKLAM · deneme sürümü','WERBUNG · Testversion','AD · test version'],ad_text:['Gerçek uygulamada burada kısa bir reklam videosu oynar.','In der echten App läuft hier ein kurzes Werbevideo.','In the real app a short ad video plays here.'],
 ad_sec:['{0} saniye…','{0} Sekunden…','{0} seconds…'],
 // eşyalar
 b_cini:['Çini','Fliese','Tile'],b_lale:['Lale','Tulpe','Tulip'],b_gece:['Gece Mavisi','Nachtblau','Night Blue'],b_nazar:['Nazar','Nazar','Evil Eye'],b_zumrut:['Zümrüt','Smaragd','Emerald'],b_altin:['Altın Kakma','Goldintarsie','Gold Inlay'],b_foto:['Fotoğrafım','Mein Foto','My photo'],
@@ -1106,10 +1106,35 @@ $('spinBtn').onclick=()=>{ensureDaily();if(SV.daily.spun||spinning)return;spinni
       if(lastSeg!==null&&seg!==lastSeg&&Date.now()-lastT>45){SND.play('wheel');lastT=Date.now();}lastSeg=seg;}
     if(Date.now()-t0<4250)requestAnimationFrame(loop);};requestAnimationFrame(loop);}
   setTimeout(()=>{spinning=false;SV.daily.spun=true;save();$('wRes').textContent=t('coins_won',PRIZES[i]);confetti();SND.play('coins');addCoins(PRIZES[i]);updWheelUI();updDots();},4300);};
-$('vidBtn1').onclick=()=>{ensureDaily();if(SV.daily.videos>=VMAX)return;openOv('adOv');const bar=$('adBar');bar.style.transition='none';bar.style.width='0';
+// Android uygulamasında gerçek ödüllü reklam (AdMob); web sürümünde aşağıdaki deneme ekranı çalışır.
+// Geliştirmede test reklamı çalışır; yayın paketinde (npm run release) AD_TEST otomatik false olur.
+const AD_TEST=true,AD_UNIT=AD_TEST?'ca-app-pub-3940256099942544/5224354917':'ca-app-pub-8144581905836273/8170490161';
+const nativeAds=window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()?Capacitor.Plugins.AdMob:null;
+let adsReady=null;
+function readyAds(){if(!adsReady)adsReady=(async()=>{let c=await nativeAds.requestConsentInfo();
+    if(c.isConsentFormAvailable&&c.status==='REQUIRED')c=await nativeAds.showConsentForm();
+    $('adPrivacyWrap').style.display=c.privacyOptionsRequirementStatus==='REQUIRED'?'':'none';
+    if(!c.canRequestAds)throw new Error('consent');await nativeAds.initialize({initializeForTesting:AD_TEST});})().catch(e=>{adsReady=null;throw e;});
+  return adsReady;}
+if(nativeAds)readyAds().catch(()=>{});
+$('adPrivacy').onclick=e=>{e.preventDefault();if(nativeAds)nativeAds.showPrivacyOptionsForm().catch(()=>toast(t('ad_fail')));};
+function grantVideo(){SV.daily.videos++;save();addCoins(VREW);confetti();SND.play('coins');$('wRes').textContent=t('video_won',VREW);updWheelUI();}
+async function nativeVideo(){$('vidBtn1').disabled=true;let rewarded=false;const handles=[];
+  try{await readyAds();
+    handles.push(await nativeAds.addListener('onRewardedVideoAdReward',()=>{rewarded=true;}));
+    let finish;const closed=new Promise(r=>finish=r);
+    handles.push(await nativeAds.addListener('onRewardedVideoAdDismissed',()=>finish()));
+    handles.push(await nativeAds.addListener('onRewardedVideoAdFailedToShow',()=>finish('fail')));
+    await nativeAds.prepareRewardVideoAd({adId:AD_UNIT,isTesting:AD_TEST});
+    nativeAds.showRewardVideoAd().catch(()=>finish('fail'));
+    const result=await closed;await new Promise(r=>setTimeout(r,300));
+    if(rewarded)grantVideo();else if(result==='fail')toast(t('ad_fail'));
+  }catch(e){console.error(e);toast(t('ad_fail'));}
+  finally{handles.forEach(h=>h.remove());updWheelUI();}}
+$('vidBtn1').onclick=()=>{ensureDaily();if(SV.daily.videos>=VMAX)return;if(nativeAds)return nativeVideo();openOv('adOv');const bar=$('adBar');bar.style.transition='none';bar.style.width='0';
   void bar.offsetWidth;bar.style.transition='width 5s linear';bar.style.width='100%';let n=5;$('adTxt').textContent=t('ad_sec',5);
   const iv=setInterval(()=>{n--;if(n>0){$('adTxt').textContent=t('ad_sec',n);return;}clearInterval(iv);closeOv('adOv');
-    SV.daily.videos++;save();addCoins(VREW);confetti();SND.play('coins');$('wRes').textContent=t('video_won',VREW);updWheelUI();},1000);};
+    grantVideo();},1000);};
 
 // ================= ONLINE (Supabase) =================
 const SB_URL='https://omvoplofqsnzsjmkomck.supabase.co',SB_KEY='sb_publishable_4KUXCSpZwIWm94ZatVltRw_bqdm7j8E';
