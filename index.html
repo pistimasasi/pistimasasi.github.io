@@ -48,6 +48,12 @@ button{font-family:inherit}
 .tile span{font-size:26px}
 .tile .dot{top:4px;right:6px}
 .fair{text-align:center;font-size:12px;opacity:.75;margin-top:2px}
+.share{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:linear-gradient(180deg,#fff,#e8e0cc);color:#5c0d18;border:none;border-radius:14px;padding:12px;font-size:16px;font-weight:900;cursor:pointer;box-shadow:0 3px 0 #b39b6b}
+.share:active{transform:translateY(2px);box-shadow:0 1px 0 #b39b6b}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 12px}
+.sbtn{border:none;color:#fff;border-radius:12px;padding:13px 6px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:inset 0 -3px 0 rgba(0,0,0,.25)}
+.sbtn:active{transform:translateY(2px)}
+#shareOv .sbtn{color:#fff;text-shadow:0 1px 1px rgba(0,0,0,.3)}
 /* koltuklar */
 .seat{position:relative;display:flex;align-items:center;gap:9px;background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:6px 9px}
 .seat.hide{display:none}
@@ -293,6 +299,7 @@ button{font-family:inherit}
       <button class="tile" id="tProf"><span>👤</span><b data-i18n="tile_prof">Profil</b></button>
       <button class="tile" id="tRules"><span>📖</span><b data-i18n="tile_rules">Kurallar</b></button>
     </div>
+    <button class="share" id="shareBtn" data-i18n="share_btn">📤 Arkadaşını davet et</button>
     <div class="fair" data-i18n="fair">🤝 Hilesiz Pişti: botlar senin kartlarını göremez.</div>
     <div class="legal"><a href="impressum.html" target="_blank" rel="noopener">Impressum</a> · <a href="datenschutz.html" target="_blank" rel="noopener" data-i18n="legal_priv">Gizlilik</a><span id="adPrivacyWrap" style="display:none"> · <a href="#" id="adPrivacy" data-i18n="ad_privacy">Reklam ayarları</a></span></div>
   </div>
@@ -339,6 +346,19 @@ button{font-family:inherit}
   <button class="gitem" data-g="kahve"><span class="gi">☕</span><span class="gn" data-i18n="g_kahve">Türk kahvesi</span><span class="gp">🪙 50</span></button>
   <div class="gnote" id="gNote"></div>
   <button class="btn2" style="margin:10px 0 0" id="gClose" data-i18n="close">Kapat</button>
+</div></div>
+
+<div class="ov" id="shareOv"><div class="box">
+  <h2 data-i18n="share_t">Arkadaşını davet et</h2><p data-i18n="share_p">Linki gönder, arkadaşın Android, iPhone veya bilgisayardan hemen oynasın.</p>
+  <div class="sgrid">
+    <button class="sbtn" data-s="wa" style="background:#25d366">WhatsApp</button>
+    <button class="sbtn" data-s="fb" style="background:#1877f2">Facebook</button>
+    <button class="sbtn" data-s="ig" style="background:linear-gradient(45deg,#f58529,#dd2a7b,#8134af)">Instagram</button>
+    <button class="sbtn" data-s="tg" style="background:#229ed9">Telegram</button>
+    <button class="sbtn" data-s="x" style="background:#111">X</button>
+    <button class="sbtn" data-s="copy" style="background:#2a9d8f" data-i18n="share_copy">🔗 Linki kopyala</button>
+  </div>
+  <button class="btn2" id="shareClose" data-i18n="close">Kapat</button>
 </div></div>
 
 <div class="ov" id="endOv"><div class="box" id="endBox"></div></div>
@@ -537,6 +557,12 @@ comm_html:[
 `<ul><li>Sei respektvoll. Beleidigungen, Belästigung, Rassismus und Drohungen sind verboten.</li><li>Teile keine persönlichen Daten (Telefon, Adresse, Social Media) – weder deine noch fremde.</li><li>Cheaten, Bots und das Ausnutzen von Fehlern sind verboten.</li><li>Münzen und Spenden dienen nur dem Spaß; sie können nicht verkauft oder in Geld umgetauscht werden.</li><li>Bei Regelverstößen tippe auf das Bild des Spielers und wähle <b>Melden</b> oder <b>Blockieren</b>.</li><li>Meldungen werden geprüft; wer gegen die Regeln verstößt, kann gesperrt werden.</li></ul><h2 style="font-size:17px">🔒 Datenschutz (kurz)</h2><p>Für das Online-Spiel brauchen wir keine E-Mail und kein Passwort. Verarbeitet werden: eine zufällige anonyme Nutzerkennung, dein Spitzname und deine Avatar-Farbe, deine Spielzüge, Chatnachrichten, gesendete Emojis/Spenden und deine Meldungen.</p><p>Die Daten liegen auf Supabase-Servern in der EU (Frankfurt) und werden nur genutzt, um das Spiel zu betreiben, Missbrauch zu verhindern und Meldungen zu prüfen. Keine Weitergabe für Werbung oder Verkauf.</p><p><a href="datenschutz.html" target="_blank" rel="noopener">Vollständige Datenschutzerklärung</a></p>`,
 `<ul><li>Be respectful. Swearing, insults, harassment, racism and threats are not allowed.</li><li>Don’t share personal details (phone, address, social media) — yours or anyone else’s.</li><li>Cheating, bots and exploiting bugs are not allowed.</li><li>Coins and treats are just for fun; they can’t be sold or exchanged for money.</li><li>If someone breaks the rules, tap their picture and choose <b>Report</b> or <b>Block</b>.</li><li>Reports are reviewed; rule breakers may lose access to the game.</li></ul><h2 style="font-size:17px">🔒 Privacy (short)</h2><p>Playing online needs no email or password. We process: a random anonymous user ID, your nickname and avatar color, your moves, chat messages, emojis/treats you send and your reports.</p><p>Data is stored on Supabase servers in the EU (Frankfurt) and used only to run the game, prevent abuse and review reports. It is not shared for advertising or sale.</p><p><a href="datenschutz.html" target="_blank" rel="noopener">Full privacy policy</a></p>`],
 understood:['Anladım','Verstanden','Got it'],legal_priv:['Gizlilik','Datenschutz','Privacy'],
+share_btn:['📤 Arkadaşını davet et','📤 Freunde einladen','📤 Invite friends'],share_t:['Arkadaşını davet et','Freunde einladen','Invite friends'],
+share_p:['Linki gönder, arkadaşın Android, iPhone veya bilgisayardan hemen oynasın.','Schick den Link – deine Freunde können sofort auf Android, iPhone oder PC spielen.','Send the link – your friends can play right away on Android, iPhone or PC.'],
+share_text:['Benimle Pişti oyna! 🃏 Bilgisayara karşı ya da online gerçek oyuncularla, ücretsiz:','Spiel Pişti mit mir! 🃏 Gegen den Computer oder online mit echten Spielern – kostenlos:','Play Pişti with me! 🃏 Against the computer or online with real players – free:'],
+share_wa:['WhatsApp ile gönder','Per WhatsApp senden','Send via WhatsApp'],share_copy:['🔗 Linki kopyala','🔗 Link kopieren','🔗 Copy link'],
+share_copied:['Link kopyalandı ✓','Link kopiert ✓','Link copied ✓'],
+share_ig:['Link kopyalandı – Instagram’da hikâyene veya mesaja yapıştır','Link kopiert – in Instagram in Story oder Nachricht einfügen','Link copied – paste it into your Instagram story or message'],
 wait_t:['Masa hazırlanıyor','Tisch wird vorbereitet','Preparing the table'],connecting:['Bağlanılıyor…','Verbinde…','Connecting…'],cancel:['İptal','Abbrechen','Cancel'],
 player:['Oyuncu','Spieler','Player'],
 wheel_html:['GÜNLÜK<br>ÇARK','TÄGLICHES<br>GLÜCKSRAD','DAILY<br>WHEEL'],spin:['ÇEVİR!','DREHEN!','SPIN!'],
@@ -771,6 +797,31 @@ $('tWheel').onclick=()=>openWheel();
 $('tStats').onclick=()=>{renderStats();openOv('statsOv');};
 $('tProf').onclick=()=>openProfile();
 $('tRules').onclick=$('rulesBtn').onclick=()=>openOv('rulesOv');
+// Paylaş: önce cihazın kendi paylaşım menüsü (Capacitor Share eklentisi / Web Share), yoksa WhatsApp + link kopyalama penceresi.
+const SHARE_URL='https://pistimasasi.github.io/';
+const isNative=()=>!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
+const openExt=u=>{if(isNative())location.href=u;else window.open(u,'_blank','noopener');};
+$('shareBtn').onclick=async()=>{const text=t('share_text'),title='Pişti Masası';
+  try{
+    if(isNative()&&Capacitor.isPluginAvailable&&Capacitor.isPluginAvailable('Share')){await Capacitor.Plugins.Share.share({title,text,url:SHARE_URL,dialogTitle:t('share_t')});return;}
+    if(navigator.share&&matchMedia('(pointer:coarse)').matches){await navigator.share({title,text,url:SHARE_URL});return;}
+  }catch(e){if(/abort|cancel/i.test((e&&(e.name+' '+e.message))||''))return;}
+  openOv('shareOv');};
+async function copyShare(){const s=t('share_text')+' '+SHARE_URL;let ok=false;
+  try{await navigator.clipboard.writeText(s);ok=true;}catch(e){}
+  if(!ok){const ta=document.createElement('textarea');ta.value=s;ta.style.cssText='position:fixed;opacity:0';document.body.appendChild(ta);ta.select();try{ok=document.execCommand('copy');}catch(e){}ta.remove();}
+  return ok;}
+document.querySelectorAll('#shareOv .sbtn').forEach(b=>b.onclick=async()=>{
+  const s=b.dataset.s,txt=encodeURIComponent(t('share_text')),u=encodeURIComponent(SHARE_URL);closeOv('shareOv');
+  if(s==='wa')return openExt('https://wa.me/?text='+txt+'%20'+u);
+  if(s==='fb')return openExt('https://www.facebook.com/sharer/sharer.php?u='+u);
+  if(s==='tg')return openExt('https://t.me/share/url?url='+u+'&text='+txt);
+  if(s==='x')return openExt('https://twitter.com/intent/tweet?text='+txt+'&url='+u);
+  const ok=await copyShare();
+  // Instagram'ın link paylaşma adresi yok: link kopyalanır, Instagram açılır, kullanıcı hikâye/mesaja yapıştırır.
+  if(s==='ig'){toast(t('share_ig'));setTimeout(()=>openExt('https://www.instagram.com/'),900);return;}
+  toast(ok?t('share_copied'):SHARE_URL);});
+$('shareClose').onclick=()=>closeOv('shareOv');
 $('homeBtn').onclick=()=>{if(G&&!G.over)openOv('quitOv');else if(G&&G.online)leaveOnline();else{G=null;showScreen('menu');renderMenu();}};
 $('quitNo').onclick=()=>closeOv('quitOv');
 $('quitYes').onclick=()=>{closeOv('quitOv');if(G&&G.online)return leaveOnline();G=null;$('sheet').classList.remove('open');showScreen('menu');renderMenu();};
