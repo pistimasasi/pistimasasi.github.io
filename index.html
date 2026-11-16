@@ -310,7 +310,7 @@ button{font-family:inherit}
 .lbrow.me{background:#fff3c4;border-radius:8px}
 /* oyun ekranı: ekrana tam otur, kaydırma yok */
 body.ingame{overflow:hidden;height:100vh;height:100dvh}
-body.ingame .app{height:100vh;height:100dvh;min-height:0;overflow:hidden;padding-bottom:max(8px,env(safe-area-inset-bottom))}
+body.ingame .app{position:fixed;top:0;bottom:0;left:0;right:0;margin:0 auto;height:auto;min-height:0;overflow:hidden;padding-top:max(8px,env(safe-area-inset-top));padding-bottom:max(8px,env(safe-area-inset-bottom))}
 body.ingame #game{min-height:0;overflow:hidden}
 body.ingame .midrow{min-height:0}
 body.ingame .table{min-height:0}
@@ -326,7 +326,7 @@ body.k2 .deck .card{width:42px;height:58px}body.k2 .felt{min-height:120px}body.k
 /* masa bahsi */
 .tstk{background:#11603d;color:#ffd166;border-radius:7px;padding:2px 7px}
 .pottag{position:absolute;top:7px;left:8px;background:rgba(0,0,0,.5);border:2px solid #f2b632;border-radius:12px;padding:3px 9px;font-size:12px;font-weight:900;color:#ffd166;display:none;z-index:1}
-#game.online .pottag{display:block}
+#game.staked .pottag{display:block}
 /* salonda kendi masam */
 .tcard.mine{box-shadow:0 0 0 3px #f2b632,0 4px 14px rgba(242,182,50,.5),inset 0 0 0 2px #2ec27e}
 .tcard.mine .tst{animation:sitp 1.4s ease-in-out infinite}
@@ -365,6 +365,8 @@ body.k2 .deck .card{width:42px;height:58px}body.k2 .felt{min-height:120px}body.k
       <div class="seg" id="segDiff"><button data-v="kolay" data-i18n="d_kolay">Kolay</button><button data-v="orta" data-i18n="d_orta">Orta</button><button data-v="zor" data-i18n="d_zor">Zor</button></div>
       <div class="plabel" data-i18n="menu_target">BİTİŞ PUANI</div>
       <div class="seg" id="segTarget"><button data-v="51">51</button><button data-v="101">101</button><button data-v="151">151</button></div>
+      <div class="plabel" data-i18n="menu_stake">MASA BAHSİ</div>
+      <div class="seg" id="segStake"><button data-v="100">🪙 100</button><button data-v="500">🪙 500</button><button data-v="1000">🪙 1.000</button><button data-v="5000">🪙 5.000</button></div>
       <div class="plabel" data-i18n="menu_lang">DİL</div>
       <div class="seg" id="segLang"><button data-v="tr">🇹🇷 Türkçe</button><button data-v="de">🇩🇪 Deutsch</button><button data-v="en">🇬🇧 English</button></div>
     </div>
@@ -643,7 +645,7 @@ const SND=(()=>{
 // ================= DİL / SPRACHE / LANGUAGE =================
 const I18N={
 // menü
-menu_table:['MASA','TISCH','TABLE'],menu_diff:['ZORLUK','SCHWIERIGKEIT','DIFFICULTY'],menu_target:['BİTİŞ PUANI','ZIELPUNKTE','TARGET SCORE'],menu_lang:['DİL','SPRACHE','LANGUAGE'],
+menu_table:['MASA','TISCH','TABLE'],menu_diff:['ZORLUK','SCHWIERIGKEIT','DIFFICULTY'],menu_target:['BİTİŞ PUANI','ZIELPUNKTE','TARGET SCORE'],menu_lang:['DİL','SPRACHE','LANGUAGE'],menu_stake:['MASA BAHSİ · kazanan potu alır','EINSATZ · Gewinner bekommt den Pot','STAKE · winner takes the pot'],
 m2:['👤 2 Kişi','👤 2 Spieler','👤 2 Players'],m4:['👥 4 Kişi','👥 4 Spieler','👥 4 Players'],mesli:['🤝 Eşli','🤝 Teams','🤝 Teams'],
 d_kolay:['Kolay','Leicht','Easy'],d_orta:['Orta','Mittel','Medium'],d_zor:['Zor','Schwer','Hard'],
 play:['HEMEN OYNA ▶','JETZT SPIELEN ▶','PLAY NOW ▶'],
@@ -940,14 +942,15 @@ function renderMenu(){
   $('mRank').textContent='🎖️ '+t(cur[0]);
   if(nx){$('mXp').style.width=((SV.xp-cur[1])/(nx[1]-cur[1])*100)+'%';$('mXpTxt').textContent=`${fmt(SV.xp)} / ${fmt(nx[1])} XP → ${t(nx[0])}`;}
   else{$('mXp').style.width='100%';$('mXpTxt').textContent=`${fmt(SV.xp)} XP · ${t('top_rank')}`;}
-  for(const [id,key] of [['segMode','mode'],['segDiff','diff'],['segTarget','target']])
+  for(const [id,key] of [['segMode','mode'],['segDiff','diff'],['segTarget','target'],['segStake','stake']])
     $(id).querySelectorAll('button').forEach(b=>b.classList.toggle('sel',b.dataset.v===SV.settings[key]));
   updDots();showCoins();
 }
-for(const [id,key] of [['segMode','mode'],['segDiff','diff'],['segTarget','target']])
+if(!SV.settings.stake)SV.settings.stake='100';
+for(const [id,key] of [['segMode','mode'],['segDiff','diff'],['segTarget','target'],['segStake','stake']])
   $(id).querySelectorAll('button').forEach(b=>b.onclick=()=>{SV.settings[key]=b.dataset.v;save();renderMenu();});
 $('segLang').querySelectorAll('button').forEach(b=>b.onclick=()=>{SV.lang=b.dataset.v;save();applyLang();renderMenu();});
-function showScreen(s){document.body.classList.toggle('ingame',s==='game');if(s!=='game')document.body.classList.remove('k1','k2');else requestAnimationFrame(()=>fitGame());$('menu').classList.toggle('on',s==='menu');$('game').classList.toggle('on',s==='game');$('lobby').classList.toggle('on',s==='lobby');$('homeBtn').style.display=s==='game'?'':'none';}
+function showScreen(s){try{scrollTo(0,0);}catch(e){}document.body.classList.toggle('ingame',s==='game');if(s!=='game')document.body.classList.remove('k1','k2');else requestAnimationFrame(()=>fitGame());$('menu').classList.toggle('on',s==='menu');$('game').classList.toggle('on',s==='game');$('lobby').classList.toggle('on',s==='lobby');$('homeBtn').style.display=s==='game'?'':'none';}
 function fitGame(reset){const g=$('game');if(!g.classList.contains('on'))return;const b=document.body;if(reset!==false)b.classList.remove('k1','k2');
   for(const k of ['k1','k2']){if(g.scrollHeight<=g.clientHeight+1)break;b.classList.add(k);}}
 addEventListener('resize',()=>requestAnimationFrame(()=>fitGame()));
@@ -1072,14 +1075,17 @@ const unitOf=i=>G.mode==='esli'?i%2:i;
 const unitName=u=>G.mode==='esli'?G.players.filter(p=>p.i%2===u).map(p=>p.name).join(' + '):G.players[u].name;
 const seatName=i=>G.n===2?['me','top'][i]:['me','right','top','left'][i];
 
-function newGame(){$('game').classList.remove('watching','online');$('chatBtn').style.display='';$('bluffBar').className='bluffbar';
+function newGame(){const stake=+SV.settings.stake||100;if(SV.coins<stake){G=null;showScreen('menu');renderMenu();openNoCoins(stake);return;}
+  $('game').classList.remove('watching','staked');$('chatBtn').style.display='';$('bluffBar').className='bluffbar';
   const mode=SV.settings.mode,n=mode==='2'?2:4,names=shuffle(BOTNAMES.slice()),cols=shuffle(BOTCOL.slice());
-  G={id:++gidSeq,mode,n,target:+SV.settings.target,diff:SV.settings.diff,players:[],tot:[0,0,0,0],starter:0,over:false,giftTo:n===2?1:2};
+  G={id:++gidSeq,mode,n,stake,share:mode==='4'?stake*4:stake*2,target:+SV.settings.target,diff:SV.settings.diff,players:[],tot:[0,0,0,0],starter:0,over:false,giftTo:n===2?1:2};
   for(let i=0;i<n;i++)G.players.push(i===0?{i,human:true,name:myName(),ava:myAva(),back:myBack(),gifts:{}}
     :{i,human:false,name:names[i-1],ava:botAva(cols[i-1]),back:backImg(BOTBACK[i-1]),gifts:{}});
   $('game').classList.toggle('n4',n===4);
   $('log').innerHTML='';addChat('sys',null,t('welcome_bots'));
   unread=0;$('unread').style.display='none';
+  $('game').classList.add('staked');$('potTag').textContent='🏆 '+t('pot_word')+' 🪙 '+fmt(stake*n);
+  addCoins(-stake);toast(t('stake_paid',fmt(stake),fmt(G.share)));
   showScreen('game');buildSeats();newRound();
   const gid=G.id;setTimeout(()=>{if(G&&G.id===gid)say(1,t('bot_hello'));},900);
 }
@@ -1189,14 +1195,14 @@ function endRound(){
   if(!G.over)SND.play('round');
   let title=t('round_over');
   if(G.over){const w=tots.indexOf(best),won=w===me;SV.stats.games++;taskProg('game',1);
-    if(won){SV.stats.wins++;addXP(100);addCoins(50);confetti();SND.play('win');title=t('you_won');say(randBot(),t('bot_congrats'));}
+    if(won){SV.stats.wins++;addXP(100);addCoins(G.share);confetti();SND.play('win');title=t('you_won');say(randBot(),t('bot_congrats'));}
     else{SND.play('lose');title=t('x_won',unitName(w));say(w===0?randBot():(G.mode==='esli'?randBot():w),t('bot_rematch'));}}
   checkAch();save();
   G.turn=null;render();
   let h=`<h2>${esc(title)}</h2><table><tr><th></th>${res.map((r,u)=>`<th>${esc(unitName(u))}${u===me?' ⭐':''}</th>`).join('')}</tr>`;
   [[t('row_cards'),'cards'],[t('row_pisti'),'pisti'],[t('row_most'),'most'],['<b>'+t('row_round')+'</b>','sum']].forEach(([n,k])=>h+=`<tr><td>${n}</td>${res.map(r=>`<td>${k==='sum'?'<b>'+r[k]+'</b>':r[k]}</td>`).join('')}</tr>`);
   h+=`<tr><td><b>${t('row_total')}</b></td>${tots.map(t=>`<td><b>${t}</b></td>`).join('')}</tr></table>`;
-  if(G.over)h+=`<p style="text-align:center">${t('reached',G.target)}${tots.indexOf(best)===me?' '+t('win_bonus'):''}</p>`;
+  if(G.over)h+=`<p style="text-align:center">${t('reached',G.target)}</p><p style="text-align:center;font-weight:800">${tots.indexOf(best)===me?t('pot_won',fmt(G.share)):t('stake_lost',fmt(G.stake))}</p>`;
   h+=`<div class="btnrow"><button class="btn2" id="toMenu">${t('main_menu')}</button><button class="btn" id="nextBtn">${G.over?t('new_game'):t('next_round')}</button></div>`;
   $('endBox').innerHTML=h;openOv('endOv');
   $('nextBtn').onclick=async()=>{closeOv('endOv');if(G.over){await maybeInterstitial();newGame();}else{G.starter=(G.starter+1)%G.n;newRound();}};
@@ -1479,7 +1485,7 @@ function setupOnline(room,players){
     G.players.push({i:li,human:li===0&&!W,remote:li!==0||W,uid:pl?pl.user_id:null,name:pl?pl.name:'?',ava:personAva(AVCOL[(pl?pl.avatar:0)%8]),
       back:li===0&&!W?myBack():backImg('cini'),gifts:{},left:!!(pl&&pl.left_at)});}
   ON.lastN=st.lastPlay?st.lastPlay.n:0;ON.resultRound=st.result?st.result.round:0;
-  $('game').classList.toggle('n4',n===4);$('game').classList.toggle('watching',W);$('game').classList.toggle('online',!W);
+  $('game').classList.toggle('n4',n===4);$('game').classList.toggle('watching',W);$('game').classList.toggle('staked',!W);
   $('chatBtn').style.display=ON.chat?'':'none';
   showScreen('game');buildSeats();
   if(W)addChat('sys',null,t('watching_tag'));else if(!ON.chat)addChat('sys',null,t('chat_closed'));
@@ -1611,7 +1617,7 @@ async function leaveOnline(silent){
 function endOnline(msg){
   if(!ON)return;clearInterval(ON.poll);clearInterval(ON.ping);try{sb.removeChannel(ON.ch);}catch(e){}
   ON=null;G=null;['waitOv','endOv','pmOv'].forEach(closeOv);$('sheet').classList.remove('open');
-  $('game').classList.remove('watching','online');$('chatBtn').style.display='';$('bluffBar').className='bluffbar';
+  $('game').classList.remove('watching','staked');$('chatBtn').style.display='';$('bluffBar').className='bluffbar';
   showScreen('lobby');startLobby();if(msg)toast(msg);
 }
 
