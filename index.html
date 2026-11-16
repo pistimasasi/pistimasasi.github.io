@@ -323,6 +323,10 @@ body.k1 .react{padding:5px}body.k1 .rb{font-size:20px;padding:4px 0}body.k1 .top
 body.k2 .hand .card{width:58px;height:82px}body.k2 .hand .pip{font-size:28px}body.k2 .hand .face{inset:5px 13px}body.k2 .hand .face .fe{font-size:20px}
 body.k2 .pile,body.k2 .pile .card{width:68px;height:95px}body.k2 .pile .pip{font-size:34px}body.k2 .pile .face{inset:5px 15px}body.k2 .pile .face .fe{font-size:24px}
 body.k2 .deck .card{width:42px;height:58px}body.k2 .felt{min-height:120px}body.k2 .shand .card{width:30px;height:42px}
+/* masa bahsi */
+.tstk{background:#11603d;color:#ffd166;border-radius:7px;padding:2px 7px}
+.pottag{position:absolute;top:7px;left:8px;background:rgba(0,0,0,.5);border:2px solid #f2b632;border-radius:12px;padding:3px 9px;font-size:12px;font-weight:900;color:#ffd166;display:none;z-index:1}
+#game.online .pottag{display:block}
 /* salonda kendi masam */
 .tcard.mine{box-shadow:0 0 0 3px #f2b632,0 4px 14px rgba(242,182,50,.5),inset 0 0 0 2px #2ec27e}
 .tcard.mine .tst{animation:sitp 1.4s ease-in-out infinite}
@@ -395,6 +399,7 @@ body.k2 .deck .card{width:42px;height:58px}body.k2 .felt{min-height:120px}body.k
         <div class="pile" id="pile"></div>
         <div class="deck"><div class="card back" id="deckCard"><div class="deckN"><span id="deckN">0</span></div></div></div>
         <div class="msg" id="msg"></div>
+        <div class="pottag" id="potTag"></div>
       </div></div>
       <div class="seat side right hide" id="seat-right"></div>
     </div>
@@ -531,6 +536,13 @@ body.k2 .deck .card{width:42px;height:58px}body.k2 .felt{min-height:120px}body.k
   <p id="waitTxt">Bağlanılıyor…</p>
   <div id="waitList" style="margin:10px 0"></div>
   <button class="btn2" id="waitCancel" data-i18n="cancel">İptal</button>
+</div></div>
+
+<div class="ov" id="noCoinOv"><div class="box" style="text-align:center">
+  <h2 data-i18n="nc_t">🪙 Jetonun yetmiyor</h2>
+  <p id="ncTxt"></p>
+  <div id="ncBtns" style="margin-top:12px"></div>
+  <button class="btn2" data-close="noCoinOv" data-i18n="close">Kapat</button>
 </div></div>
 
 <div class="ov" id="createOv"><div class="box">
@@ -765,7 +777,7 @@ l_empty_f:['Filtrene uyan masa yok. 🔽 Filtre’yi değiştir veya ⚡ Hemen O
 st_playing:['▶ Oyunda','▶ Läuft','▶ Playing'],st_waiting:['⏳ Oyuncu bekliyor','⏳ Wartet','⏳ Waiting'],
 sit:['OTUR','SETZ','SIT'],my_wait:['⏳ Rakip bekleniyor… Masan salonda görünüyor.','⏳ Warte auf Gegner… Dein Tisch ist in der Lobby sichtbar.','⏳ Waiting for opponents… Your table is visible in the lobby.'],my_leave:['🚪 Kalk','🚪 Aufstehen','🚪 Leave'],game_go:['Masan doldu, oyun başlıyor! 🃏','Dein Tisch ist voll, das Spiel beginnt! 🃏','Your table is full, the game starts! 🃏'],empty_seat:['Boş koltuk','Frei','Free'],watch:['İzle','Zuschauen','Watch'],bluff_word:['Blöflü','Bluff','Bluff'],
 any:['Farketmez','Egal','Any'],yes:['Evet','Ja','Yes'],no:['Hayır','Nein','No'],chat_on:['Açık','An','On'],chat_off:['Kapalı','Aus','Off'],
-o_mode:['Kişi','Spieler','Players'],o_target:['Bitiş puanı','Zielpunkte','Target score'],o_bluff:['Blöflü','Bluff','Bluff'],o_chat:['Sohbet','Chat','Chat'],
+o_stake:['Masa bahsi','Einsatz','Stake'],nc_t:['🪙 Jetonun yetmiyor','🪙 Nicht genug Münzen','🪙 Not enough coins'],nc_p:['Bu masa için 🪙 {0} gerekiyor, sende 🪙 {1} var. Video izleyerek jeton kazanabilirsin!','Für diesen Tisch brauchst du 🪙 {0}, du hast 🪙 {1}. Schau ein Video und verdiene Münzen!','This table needs 🪙 {0}, you have 🪙 {1}. Watch a video to earn coins!'],nc_support:['🔥 Destek jetonu al (+{0})','🔥 Hilfsmünzen holen (+{0})','🔥 Get support coins (+{0})'],nc_wheel:['🎡 Günlük çarkı çevir','🎡 Tägliches Glücksrad drehen','🎡 Spin the daily wheel'],nc_ok:['Tamam, artık oturabilirsin! ✅','Super, jetzt kannst du dich setzen! ✅','Great, now you can sit! ✅'],stake_paid:['🪙 {0} masaya yatırıldı · Kazanan 🪙 {1} alır','🪙 {0} gesetzt · Gewinner bekommt 🪙 {1}','🪙 {0} staked · Winner gets 🪙 {1}'],pot_won:['🏆 Potu kazandın: +{0} 🪙','🏆 Pot gewonnen: +{0} 🪙','🏆 You won the pot: +{0} 🪙'],stake_lost:['Masa bahsi: -{0} 🪙. Bir dahakine!','Einsatz: -{0} 🪙. Nächstes Mal!','Stake: -{0} 🪙. Next time!'],pot_word:['Pot','Pot','Pot'],o_mode:['Kişi','Spieler','Players'],o_target:['Bitiş puanı','Zielpunkte','Target score'],o_bluff:['Blöflü','Bluff','Bluff'],o_chat:['Sohbet','Chat','Chat'],
 c_t:['➕ Masa kur','➕ Tisch eröffnen','➕ Create table'],c_go:['Masayı kur ▶','Tisch eröffnen ▶','Create table ▶'],
 c_hint:['Masan salonda görünür; herkes boş koltuğa oturabilir. Masa dolunca oyun başlar.','Dein Tisch erscheint in der Lobby; jeder kann sich auf einen freien Platz setzen. Ist der Tisch voll, geht es los.','Your table shows up in the lobby; anyone can take a free seat. The game starts when it’s full.'],
 f_t:['🔽 Filtre','🔽 Filter','🔽 Filter'],f_apply:['Uygula','Anwenden','Apply'],f_reset:['Sıfırla','Zurücksetzen','Reset'],
@@ -1060,7 +1072,7 @@ const unitOf=i=>G.mode==='esli'?i%2:i;
 const unitName=u=>G.mode==='esli'?G.players.filter(p=>p.i%2===u).map(p=>p.name).join(' + '):G.players[u].name;
 const seatName=i=>G.n===2?['me','top'][i]:['me','right','top','left'][i];
 
-function newGame(){$('game').classList.remove('watching');$('chatBtn').style.display='';$('bluffBar').className='bluffbar';
+function newGame(){$('game').classList.remove('watching','online');$('chatBtn').style.display='';$('bluffBar').className='bluffbar';
   const mode=SV.settings.mode,n=mode==='2'?2:4,names=shuffle(BOTNAMES.slice()),cols=shuffle(BOTCOL.slice());
   G={id:++gidSeq,mode,n,target:+SV.settings.target,diff:SV.settings.diff,players:[],tot:[0,0,0,0],starter:0,over:false,giftTo:n===2?1:2};
   for(let i=0;i<n;i++)G.players.push(i===0?{i,human:true,name:myName(),ava:myAva(),back:myBack(),gifts:{}}
@@ -1300,7 +1312,7 @@ const PRIZES=[100,500,150,1000,200,750,250,300],SEGCOL=['#8d1b2e','#0f6e74','#c7
   for(let i=0;i<16;i++){const [x,y]=pt(i*22.5,138);s+=`<circle cx="${x}" cy="${y}" r="3.5" fill="${i%2?'#fff6c8':'#fff'}"/>`;}
   s+='<defs><radialGradient id="hub"><stop offset="0" stop-color="#ffd166"/><stop offset="1" stop-color="#c77d00"/></radialGradient></defs><circle cx="150" cy="150" r="30" fill="url(#hub)" stroke="#fff6c8" stroke-width="4"/><text x="150" y="157" text-anchor="middle" font-size="20">🍵</text>';
   $('wheelSvg').innerHTML=s;})();
-const VMAX=5,VREW=200;let wheelRot=0,spinning=false;
+const VMAX=10,VREW=200;let wheelRot=0,spinning=false;
 function updWheelUI(){ensureDaily();const d=SV.daily;
   $('spinBtn').disabled=d.spun||spinning;$('spinBtn').textContent=d.spun?t('wheel_tomorrow'):t('spin');
   $('wSub').textContent=d.spun?t('wheel_used'):t('wheel_free');
@@ -1394,8 +1406,8 @@ async function startOnline(how){
     const session=await ensureAuth();const nm=SV.onName,av=SV.onAva||0;let rid=null,error=null,watch=false;
     if(how.watch){({error}=await c.rpc('watch_room',{p_room:how.watch}));rid=how.watch;watch=true;}
     else if(how.join)({data:rid,error}=await c.rpc('join_room',{p_room:how.join,p_name:nm,p_avatar:av}));
-    else if(how.create){const o=SV.cre;({data:rid,error}=await c.rpc('create_room',{p_mode:o.mode,p_target:+o.target,p_bluff:!!o.bluff,p_chat:o.chat!==false,p_name:nm,p_avatar:av}));}
-    else{const f=SV.flt;({data:rid,error}=await c.rpc('quick_play',{p_mode:f.mode,p_target:f.target==null?null:+f.target,p_bluff:f.bluff,p_chat:f.chat,p_name:nm,p_avatar:av}));}
+    else if(how.create){const o=SV.cre;({data:rid,error}=await c.rpc('create_room',{p_mode:o.mode,p_target:+o.target,p_bluff:!!o.bluff,p_chat:o.chat!==false,p_name:nm,p_avatar:av,p_stake:+o.stake||100}));}
+    else{const f=SV.flt;({data:rid,error}=await c.rpc('quick_play',{p_mode:f.mode,p_target:f.target==null?null:+f.target,p_bluff:f.bluff,p_chat:f.chat,p_name:nm,p_avatar:av,p_stake:f.stake==null?null:+f.stake,p_max_stake:SV.coins}));}
     if(error)throw error;
     ON={rid,uid:session.user.id,watch,version:-1,lastN:0,resultRound:0,started:false,lastMsg:0,lastEv:0,firstLoad:true,chat:true};
     $('log').innerHTML='';unread=0;$('unread').style.display='none';
@@ -1439,7 +1451,7 @@ const srvUnit=u=>G.mode==='esli'?(u+ON.mySeat)%2:srv(u);
 function apply(room,players,cards){
   const me=players.find(p=>p.user_id===ON.uid);
   if(!me&&!ON.watch){endOnline(t('kicked'));return;}
-  ON.mySeat=me?me.seat:0;ON.n=room.seats;ON.chat=room.chat!==false;ON.bluff=!!room.bluff;
+  ON.mySeat=me?me.seat:0;ON.n=room.seats;ON.stake=room.stake||100;ON.chat=room.chat!==false;ON.bluff=!!room.bluff;
   if(ON.no!==room.no){ON.no=room.no;trackMe();}
   if(room.status==='waiting'&&!ON.watch){
     closeOv('waitOv');
@@ -1451,9 +1463,13 @@ function apply(room,players,cards){
     $('waitTxt').textContent=ON.watch?'#'+room.no+' · '+t('watch_wait'):'#'+room.no+' · '+t('waiting',roomTxt(room),players.length,room.seats);
     $('waitList').innerHTML=players.map(p=>`<span class="wl">${esc(p.name)}${p.user_id===ON.uid?t('you_tag'):''}</span>`).join('');
     return;}
-  if(!ON.started){ON.started=true;stopLobbyPoll();['waitOv','createOv','filterOv','usersOv','topOv','pmOv'].forEach(closeOv);if(!ON.firstLoad&&!ON.watch){toast(t('game_go'));SND.play('turn');}setupOnline(room,players);}
+  if(!ON.started){ON.started=true;stopLobbyPoll();['waitOv','createOv','filterOv','usersOv','topOv','pmOv'].forEach(closeOv);if(!ON.firstLoad&&!ON.watch){toast(t('game_go'));SND.play('turn');}setupOnline(room,players);payStake();}
   updateOnline(room,players,cards);
 }
+const potOf=()=>ON.stake*ON.n,shareOf=()=>G&&G.mode==='esli'?ON.stake*2:ON.stake*ON.n;
+function payStake(){if(!ON||ON.watch)return;SV.paid=SV.paid||{};
+  $('potTag').textContent='🏆 '+t('pot_word')+' 🪙 '+fmt(potOf());
+  if(SV.paid[ON.rid])return;SV.paid={[ON.rid]:1};save();addCoins(-ON.stake);SND.play('coins');toast(t('stake_paid',fmt(ON.stake),fmt(shareOf())));}
 function setupOnline(room,players){
   const n=room.seats,st=room.state||{};
   const W=!!ON.watch;
@@ -1463,7 +1479,7 @@ function setupOnline(room,players){
     G.players.push({i:li,human:li===0&&!W,remote:li!==0||W,uid:pl?pl.user_id:null,name:pl?pl.name:'?',ava:personAva(AVCOL[(pl?pl.avatar:0)%8]),
       back:li===0&&!W?myBack():backImg('cini'),gifts:{},left:!!(pl&&pl.left_at)});}
   ON.lastN=st.lastPlay?st.lastPlay.n:0;ON.resultRound=st.result?st.result.round:0;
-  $('game').classList.toggle('n4',n===4);$('game').classList.toggle('watching',W);
+  $('game').classList.toggle('n4',n===4);$('game').classList.toggle('watching',W);$('game').classList.toggle('online',!W);
   $('chatBtn').style.display=ON.chat?'':'none';
   showScreen('game');buildSeats();
   if(W)addChat('sys',null,t('watching_tag'));else if(!ON.chat)addChat('sys',null,t('chat_closed'));
@@ -1515,14 +1531,14 @@ function onlineResult(st,final){
   if(final&&st.winner!==null&&st.winner!==undefined&&W){let wu=0;for(let u=0;u<U;u++)if(srvUnit(u)===st.winner)wu=u;title=t('x_won',unitName(wu));SND.play('round');}
   else if(final&&st.winner!==null&&st.winner!==undefined){let wu=0;for(let u=0;u<U;u++)if(srvUnit(u)===st.winner)wu=u;won=wu===0;
     SV.stats.games++;taskProg('game',1);
-    if(won){SV.stats.wins++;addXP(100);addCoins(50);confetti();SND.play('win');title=t('you_won');}else{SND.play('lose');title=t('x_won',unitName(wu));}}
+    if(won){SV.stats.wins++;addXP(100);addCoins(shareOf());confetti();SND.play('win');title=t('you_won');}else{SND.play('lose');title=t('x_won',unitName(wu));}}
   else if(final)title=t('game_over');
   if(!W){checkAch();save();}
   let h=`<h2>${esc(title)}</h2><table><tr><th></th>${res.map((r,u)=>`<th>${esc(unitName(u))}${u===0&&!W?' ⭐':''}</th>`).join('')}</tr>`;
   [[t('row_cards'),'cards'],[t('row_pisti'),'pisti'],[t('row_most'),'most'],['<b>'+t('row_round')+'</b>','sum']].forEach(([n,k])=>h+=`<tr><td>${n}</td>${res.map(r=>`<td>${k==='sum'?'<b>'+r[k]+'</b>':r[k]}</td>`).join('')}</tr>`);
   h+=`<tr><td><b>${t('row_total')}</b></td>${tots.map(t=>`<td><b>${t}</b></td>`).join('')}</tr></table>`;
   if(final&&W)h+=`<button class="btn" id="oMenu">${t('back_lobby')}</button>`;
-  else if(final)h+=`${won?'<p style="text-align:center">'+t('win_bonus')+'</p>':''}<div class="btnrow"><button class="btn2" id="oMenu">${t('back_lobby')}</button><button class="btn" id="oAgain">${t('again_quick')}</button></div>`;
+  else if(final)h+=`<p style="text-align:center;font-weight:800">${won?t('pot_won',fmt(shareOf())):t('stake_lost',fmt(ON.stake))}</p><div class="btnrow"><button class="btn2" id="oMenu">${t('back_lobby')}</button><button class="btn" id="oAgain">${t('again_quick')}</button></div>`;
   else h+=`<p class="hint" style="text-align:center">${t('new_round_in')} <span id="oCount">5</span></p><button class="btn" id="oCont">${t('cont')}</button>`;
   $('endBox').innerHTML=h;openOv('endOv');
   if(final){const ad=!W;$('oMenu').onclick=async()=>{closeOv('endOv');await leaveOnline();if(ad)maybeInterstitial();};if($('oAgain'))$('oAgain').onclick=async()=>{closeOv('endOv');await leaveOnline(true);await maybeInterstitial();goOnline({});};}
@@ -1595,14 +1611,14 @@ async function leaveOnline(silent){
 function endOnline(msg){
   if(!ON)return;clearInterval(ON.poll);clearInterval(ON.ping);try{sb.removeChannel(ON.ch);}catch(e){}
   ON=null;G=null;['waitOv','endOv','pmOv'].forEach(closeOv);$('sheet').classList.remove('open');
-  $('game').classList.remove('watching');$('chatBtn').style.display='';$('bluffBar').className='bluffbar';
+  $('game').classList.remove('watching','online');$('chatBtn').style.display='';$('bluffBar').className='bluffbar';
   showScreen('lobby');startLobby();if(msg)toast(msg);
 }
 
 // ================= SALON =================
 let MYUID=null;const LB={list:[],pres:{},poll:null,pch:null,seen:null};
-SV.cre=SV.cre||{mode:'2',target:101,bluff:false,chat:true};
-SV.flt=SV.flt||{mode:null,target:null,bluff:null,chat:null};
+SV.cre=SV.cre||{mode:'2',target:101,bluff:false,chat:true};if(SV.cre.stake==null)SV.cre.stake=100;
+SV.flt=SV.flt||{mode:null,target:null,bluff:null,chat:null};if(!('stake' in SV.flt))SV.flt.stake=null;
 SV.favs=SV.favs||{};
 const isFav=uid=>!!(uid&&SV.favs[uid]);
 function toggleFav(uid,name){if(!uid||uid===MYUID)return;if(SV.favs[uid])delete SV.favs[uid];else{SV.favs[uid]=name;toast(t('fav_added',name));}save();
@@ -1617,7 +1633,18 @@ async function enterLobby(){
     if(data&&data.length&&!ON){const ids=data.map(d=>d.room_id);const {data:rs}=await sb.from('rooms').select('id,status').in('id',ids).in('status',['waiting','playing']);
       if(rs&&rs.length)startOnline({join:rs[0].id});}}catch(e){}
 }
-async function goOnline(how){if(ON&&(ON.started||ON.watch))return;if(ON)await leaveOnline(true);startOnline(how);}
+function stakeOf(how){if(how.watch)return 0;if(how.create)return +SV.cre.stake||100;if(how.join){const r=LB.list.find(x=>x.id===how.join);return r?(r.stake||100):100;}return SV.flt.stake!=null?+SV.flt.stake:100;}
+function openNoCoins(need){
+  $('ncTxt').textContent=t('nc_p',fmt(need),fmt(SV.coins));const B=$('ncBtns');B.innerHTML='';ensureDaily();
+  const add=(cls,txt,fn,dis)=>{const b=document.createElement('button');b.className=cls;b.textContent=txt;b.disabled=!!dis;b.onclick=fn;B.appendChild(b);};
+  const left=VMAX-SV.daily.videos;
+  add('vbtn',left>0?t('video_btn',VREW,left):t('video_none'),async()=>{closeOv('noCoinOv');await playVideo();afterGain(need);},left<=0);
+  if(supportAvail())add('btn',t('nc_support',SUPPORT),()=>{SV.daily.support=true;save();addCoins(SUPPORT);updDots();afterGain(need);});
+  if(!SV.daily.spun)add('btn',t('nc_wheel'),()=>{closeOv('noCoinOv');openWheel();});
+  openOv('noCoinOv');}
+function afterGain(need){if(SV.coins>=need){closeOv('noCoinOv');toast(t('nc_ok'));}else openNoCoins(need);}
+async function goOnline(how){if(ON&&(ON.started||ON.watch))return;
+  const need=stakeOf(how);if(need&&SV.coins<need){openNoCoins(need);return;}if(ON)await leaveOnline(true);startOnline(how);}
 function startLobby(){stopLobbyPoll();loadLobby();LB.poll=setInterval(loadLobby,4000);joinPresence();trackMe();}
 function stopLobbyPoll(){clearInterval(LB.poll);LB.poll=null;}
 async function loadLobby(){
@@ -1626,7 +1653,7 @@ async function loadLobby(){
   if(error){console.error(error);return;}
   LB.list=data||[];renderLobby();
 }
-const fltOk=r=>{const f=SV.flt;return(f.mode==null||r.mode===f.mode)&&(f.target==null||r.target===+f.target)&&(f.bluff==null||r.bluff===f.bluff)&&(f.chat==null||r.chat===f.chat);};
+const fltOk=r=>{const f=SV.flt;return(f.stake==null||(r.stake||100)===+f.stake)&&(f.mode==null||r.mode===f.mode)&&(f.target==null||r.target===+f.target)&&(f.bluff==null||r.bluff===f.bluff)&&(f.chat==null||r.chat===f.chat);};
 function renderLobby(){
   const L=$('lList'),fOn=Object.values(SV.flt).some(v=>v!=null);$('lFilter').classList.toggle('on',fOn);
   const myR=ON&&!ON.started&&!ON.watch?ON.rid:null;
@@ -1635,7 +1662,7 @@ function renderLobby(){
   if(!rs.length){L.innerHTML=`<div class="lempty">${t(fOn&&LB.list.length?'l_empty_f':'l_empty')}</div>`;return;}
   L.innerHTML='';
   rs.forEach(r=>{const d=document.createElement('div');d.className='tcard'+(r.status==='waiting'?' wait':'')+(r.id===myR?' mine':'');
-    d.innerHTML=`<div class="thead"><span class="tno">#${r.no}</span><span class="tpt">${r.target}</span><span>${esc(t('mode_'+r.mode))}</span>${r.bluff?'<span class="ttag">🃏 '+esc(t('bluff_word'))+'</span>':''}<span class="ttag">${r.chat?'💬':'🔇'}</span>${r.watchers?'<span class="ttag">👁 '+r.watchers+'</span>':''}<span class="tst">${r.status==='playing'?t('st_playing'):t('st_waiting')}</span></div><div class="tseats ${r.seats===2?'s2':''}"></div>`;
+    d.innerHTML=`<div class="thead"><span class="tno">#${r.no}</span><span class="tstk">🪙 ${fmt(r.stake||100)}</span><span class="tpt">${r.target}</span><span>${esc(t('mode_'+r.mode))}</span>${r.bluff?'<span class="ttag">🃏 '+esc(t('bluff_word'))+'</span>':''}<span class="ttag">${r.chat?'💬':'🔇'}</span>${r.watchers?'<span class="ttag">👁 '+r.watchers+'</span>':''}<span class="tst">${r.status==='playing'?t('st_playing'):t('st_waiting')}</span></div><div class="tseats ${r.seats===2?'s2':''}"></div>`;
     const S=d.querySelector('.tseats');
     for(let k=0;k<r.seats;k++){const p=r.players.find(x=>x.seat===k),e=document.createElement('div');e.className='tseat'+(p&&isFav(p.uid)?' fav':'');
       if(p){const a=document.createElement('div');a.className='ava';bg(a,personAva(AVCOL[(p.avatar||0)%8]));e.appendChild(a);
@@ -1683,9 +1710,9 @@ function renderUsers(){
   if(off.length){const h=document.createElement('div');h.className='sect';h.textContent=t('u_favs_off');L.appendChild(h);off.forEach(([id,nm])=>L.appendChild(userRow({uid:id,name:nm},false)));}
   if(!vis.length&&!off.length)L.innerHTML=`<p class="hint">${t('u_none')}</p>`;
 }
-const OPT={mode:['2','4','esli'],target:[51,101,151],bluff:[false,true],chat:[true,false]};
-function optLabel(k,v){if(v==null)return t('any');if(k==='mode')return t('mode_'+v);if(k==='target')return String(v);if(k==='bluff')return v?t('yes'):t('no');return v?t('chat_on'):t('chat_off');}
-function cycler(box,obj,any){box.innerHTML='';['mode','target','bluff','chat'].forEach(k=>{const vals=any?[null,...OPT[k]]:OPT[k];
+const OPT={stake:[100,500,1000,5000],mode:['2','4','esli'],target:[51,101,151],bluff:[false,true],chat:[true,false]};
+function optLabel(k,v){if(v==null)return t('any');if(k==='stake')return '🪙 '+fmt(v);if(k==='mode')return t('mode_'+v);if(k==='target')return String(v);if(k==='bluff')return v?t('yes'):t('no');return v?t('chat_on'):t('chat_off');}
+function cycler(box,obj,any){box.innerHTML='';['stake','mode','target','bluff','chat'].forEach(k=>{const vals=any?[null,...OPT[k]]:OPT[k];
   const d=document.createElement('div');d.className='opt';d.innerHTML=`<b>${t('o_'+k)}</b><div class="cyc"><button>‹</button><span></span><button>›</button></div>`;
   const sp=d.querySelector('span'),bs=d.querySelectorAll('button');const upd=()=>sp.textContent=optLabel(k,obj[k]);
   const mv=x=>{let i=vals.findIndex(v=>v===obj[k]||(v!=null&&obj[k]!=null&&String(v)===String(obj[k])));if(i<0)i=0;obj[k]=vals[(i+x+vals.length)%vals.length];upd();};
@@ -1698,7 +1725,7 @@ $('lQuick').onclick=()=>goOnline({});
 $('lCreate').onclick=()=>{cycler($('cOpts'),SV.cre,false);openOv('createOv');};
 $('cGo').onclick=()=>{save();closeOv('createOv');goOnline({create:true});};
 $('lFilter').onclick=()=>{fDraft=Object.assign({},SV.flt);cycler($('fOpts'),fDraft,true);openOv('filterOv');};
-$('fReset').onclick=()=>{fDraft={mode:null,target:null,bluff:null,chat:null};cycler($('fOpts'),fDraft,true);};
+$('fReset').onclick=()=>{fDraft={stake:null,mode:null,target:null,bluff:null,chat:null};cycler($('fOpts'),fDraft,true);};
 $('fApply').onclick=()=>{SV.flt=fDraft;save();closeOv('filterOv');renderLobby();};
 $('lTop').onclick=()=>openTop();
 const statGrid=s=>`<div class="stgrid">${[[t('st_games'),s.games||0],[t('st_wins'),s.wins||0],[t('st_losses'),s.losses||0],[t('st_quits'),s.quits||0]].map(([n,v])=>`<div class="st"><b>${fmt(v)}</b><span>${n}</span></div>`).join('')}</div>`;
