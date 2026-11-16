@@ -309,7 +309,18 @@ button{font-family:inherit}
 .lbrow .ln{flex:1;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .lbrow.me{background:#fff3c4;border-radius:8px}
 /* oyun ekranı: ekrana tam otur, kaydırma yok */
-body.ingame{overflow:hidden;height:100vh;height:100dvh}
+body{overflow:hidden}
+.app{position:fixed;top:0;bottom:0;left:0;right:0;margin:0 auto;height:auto;min-height:0;overflow:hidden;padding-top:max(8px,env(safe-area-inset-top));padding-bottom:max(8px,env(safe-area-inset-bottom))}
+.screen.on{min-height:0}
+#menu.on,#lobby.on{overflow-y:auto;-webkit-overflow-scrolling:touch}
+#lobby .lhead,#lobby .lbar{flex:none}
+/* menü ekrana sığsın */
+.pbtns{display:flex;flex-direction:column;gap:6px}
+body.m1 .pcard{padding:7px 10px}body.m1 .pcard .ava{width:46px;height:46px}body.m1 .panel{padding:6px 10px}body.m1 .plabel{margin:4px 0 3px;font-size:11px}
+body.m1 .seg button{padding:6px 3px;font-size:13px}body.m1 .play,body.m1 .online{padding:10px;font-size:17px}
+body.m1 .tiles{grid-template-columns:repeat(6,1fr);gap:5px}body.m1 .tile{padding:6px 1px;font-size:10px;border-radius:11px}body.m1 .tile span{font-size:21px}
+body.m1 .share{padding:8px;font-size:14px}body.m1 .fair,body.m1 .legal{font-size:11px;padding:0}
+body.m2 .pbtns{display:grid;grid-template-columns:1fr 1fr}body.m2 .play,body.m2 .online{font-size:15px;padding:12px 6px}body.m2 .seg button{padding:5px 2px}body.m2 .xptxt{margin-top:1px;font-size:10px}
 body.ingame .app{position:fixed;top:0;bottom:0;left:0;right:0;margin:0 auto;height:auto;min-height:0;overflow:hidden;padding-top:max(8px,env(safe-area-inset-top));padding-bottom:max(8px,env(safe-area-inset-bottom))}
 body.ingame #game{min-height:0;overflow:hidden}
 body.ingame .midrow{min-height:0}
@@ -370,8 +381,8 @@ body.k2 .deck .card{width:42px;height:58px}body.k2 .felt{min-height:120px}body.k
       <div class="plabel" data-i18n="menu_lang">DİL</div>
       <div class="seg" id="segLang"><button data-v="tr">🇹🇷 Türkçe</button><button data-v="de">🇩🇪 Deutsch</button><button data-v="en">🇬🇧 English</button></div>
     </div>
-    <button class="play" id="playBtn" data-i18n="play">HEMEN OYNA ▶</button>
-    <button class="online" id="onlineBtn" data-i18n="online_btn">🌐 Online oyna — gerçek oyuncularla</button>
+    <div class="pbtns"><button class="play" id="playBtn" data-i18n="play">HEMEN OYNA ▶</button>
+    <button class="online" id="onlineBtn" data-i18n="online_btn">🌐 Online oyna — gerçek oyuncularla</button></div>
     <div class="tiles">
       <button class="tile" id="tShop"><span>🛒</span><b data-i18n="tile_shop">Dükkan</b></button>
       <button class="tile" id="tTasks"><span>📋</span><b data-i18n="tile_tasks">Görevler</b><i class="dot" id="taskDot"></i></button>
@@ -944,16 +955,18 @@ function renderMenu(){
   else{$('mXp').style.width='100%';$('mXpTxt').textContent=`${fmt(SV.xp)} XP · ${t('top_rank')}`;}
   for(const [id,key] of [['segMode','mode'],['segDiff','diff'],['segTarget','target'],['segStake','stake']])
     $(id).querySelectorAll('button').forEach(b=>b.classList.toggle('sel',b.dataset.v===SV.settings[key]));
-  updDots();showCoins();
+  updDots();showCoins();requestAnimationFrame(fitMenu);
 }
 if(!SV.settings.stake)SV.settings.stake='100';
 for(const [id,key] of [['segMode','mode'],['segDiff','diff'],['segTarget','target'],['segStake','stake']])
   $(id).querySelectorAll('button').forEach(b=>b.onclick=()=>{SV.settings[key]=b.dataset.v;save();renderMenu();});
 $('segLang').querySelectorAll('button').forEach(b=>b.onclick=()=>{SV.lang=b.dataset.v;save();applyLang();renderMenu();});
-function showScreen(s){try{scrollTo(0,0);}catch(e){}document.body.classList.toggle('ingame',s==='game');if(s!=='game')document.body.classList.remove('k1','k2');else requestAnimationFrame(()=>fitGame());$('menu').classList.toggle('on',s==='menu');$('game').classList.toggle('on',s==='game');$('lobby').classList.toggle('on',s==='lobby');$('homeBtn').style.display=s==='game'?'':'none';}
+function showScreen(s){try{scrollTo(0,0);}catch(e){}if(s==='menu')requestAnimationFrame(fitMenu);document.body.classList.toggle('ingame',s==='game');if(s!=='game')document.body.classList.remove('k1','k2');else requestAnimationFrame(()=>fitGame());$('menu').classList.toggle('on',s==='menu');$('game').classList.toggle('on',s==='game');$('lobby').classList.toggle('on',s==='lobby');$('homeBtn').style.display=s==='game'?'':'none';}
 function fitGame(reset){const g=$('game');if(!g.classList.contains('on'))return;const b=document.body;if(reset!==false)b.classList.remove('k1','k2');
   for(const k of ['k1','k2']){if(g.scrollHeight<=g.clientHeight+1)break;b.classList.add(k);}}
-addEventListener('resize',()=>requestAnimationFrame(()=>fitGame()));
+function fitMenu(){const m=$('menu');if(!m.classList.contains('on'))return;const b=document.body;b.classList.remove('m1','m2');
+  for(const k of ['m1','m2']){if(m.scrollHeight<=m.clientHeight+1)break;b.classList.add(k);}}
+addEventListener('resize',()=>requestAnimationFrame(()=>{fitGame();fitMenu();}));
 $('playBtn').onclick=()=>newGame();
 $('onlineBtn').onclick=()=>openOnline();
 $('sfxBtn').onclick=()=>SND.toggle();SND.ui();
@@ -1782,7 +1795,7 @@ function onlineBluffMsg(lp,nt){
 
 // ================= BAŞLAT =================
 if(!SV.lang){const nl=(navigator.language||'tr').slice(0,2);SV.lang=['tr','de','en'].includes(nl)?nl:'en';save();}
-applyLang();ensureDaily();applyEquip();showCoins();
+applyLang();ensureDaily();applyEquip();showCoins();requestAnimationFrame(fitMenu);
 if(firstRun)openProfile();else if(!SV.daily.spun)setTimeout(openWheel,600);
 </script>
 <script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}</script>
